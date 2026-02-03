@@ -581,8 +581,7 @@ function normCat(s){
   const rows = parseCSV(csv);
   const headers = rows.shift().map(h => norm(h));
 
-
-  const idx = (name) => headers.indexOf(name);
+  const idx = (name) => headers.indexOf(norm(name)); // ✅ FIX #2
 
   const out = [];
   for(const r of rows){
@@ -608,12 +607,12 @@ function normCat(s){
     out.push(p);
   }
 
+  PRODUCTS = out; // ✅ FIX #1 (EL QUE TE ROMPIA TODO)
 
-    // limpiar carrito de items que ya no existen
-    cleanupCartAgainstProducts();
-    renderProducts();
-    renderCart();
-  }
+  cleanupCartAgainstProducts();
+  renderProducts();
+  renderCart();
+}
 
   // =========================
   // STATE (Carrito)
