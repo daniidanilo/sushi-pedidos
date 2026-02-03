@@ -227,11 +227,7 @@
     }
     .waFloat:hover{transform: translateY(-2px); filter: brightness(1.02);}
     .waFloat:active{transform: translateY(0px); filter: brightness(.98);}
-    .waIcon{
-      width:30px;
-      height:30px;
-      display:block;
-    }
+    .waIcon{width:30px;height:30px;display:block;}
     .waLabel{
       position:fixed;
       right:84px;
@@ -398,7 +394,6 @@
 
   <!-- ✅ WhatsApp Floating Button (solo abre WhatsApp) -->
   <button class="waFloat" id="waFloat" aria-label="Abrir WhatsApp">
-    <!-- Icono WhatsApp (SVG) -->
     <svg class="waIcon" viewBox="0 0 32 32" aria-hidden="true">
       <path fill="#0b0d10" d="M19.11 17.36c-.27-.14-1.59-.78-1.84-.87-.25-.09-.43-.14-.61.14-.18.27-.7.87-.86 1.05-.16.18-.32.2-.59.07-.27-.14-1.15-.42-2.19-1.33-.81-.72-1.36-1.6-1.52-1.87-.16-.27-.02-.41.12-.55.12-.12.27-.32.41-.48.14-.16.18-.27.27-.46.09-.18.05-.34-.02-.48-.07-.14-.61-1.48-.84-2.03-.22-.53-.45-.46-.61-.46h-.52c-.18 0-.48.07-.73.34-.25.27-.95.93-.95 2.27 0 1.34.97 2.64 1.11 2.82.14.18 1.91 2.92 4.63 4.09.65.28 1.16.45 1.56.57.66.21 1.26.18 1.73.11.53-.08 1.59-.65 1.82-1.27.23-.62.23-1.15.16-1.27-.07-.11-.25-.18-.52-.32z"/>
       <path fill="#0b0d10" d="M16 3C9.38 3 4 8.38 4 15c0 2.31.66 4.47 1.8 6.31L4 29l7.89-1.77A11.93 11.93 0 0 0 16 27c6.62 0 12-5.38 12-12S22.62 3 16 3zm0 21.7c-1.3 0-2.58-.34-3.71-.99l-.53-.31-4.68 1.05 1.03-4.55-.35-.56A9.68 9.68 0 0 1 6.3 15C6.3 9.65 10.65 5.3 16 5.3S25.7 9.65 25.7 15 21.35 24.7 16 24.7z"/>
@@ -411,17 +406,12 @@
     // =========================
     // CONFIG
     // =========================
+    const WHATSAPP_NUMBER = "5491157990741"; // <- tu WhatsApp (sin +, sin espacios)
 
-    // ✅ WhatsApp: SOLO para abrir chat (botón flotante)
-    // - Si querés que abra directo tu chat, poné tu número real:
-    //   Ej: 54911xxxxxxxx (sin +, sin espacios)
-    const WHATSAPP_NUMBER = "5491157990741"; // <-- CAMBIÁ ESTO
+    // ⚠️ Ojo: esto expone el token en el HTML (solo para arrancar rápido).
+    const TELEGRAM_BOT_TOKEN = "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0";
+    const TELEGRAM_CHAT_ID   = "6137131451";
 
-    // ✅ Telegram: envío automático al finalizar
-    const TELEGRAM_BOT_TOKEN = "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0"; // <-- PEGÁ TU TOKEN REAL
-    const TELEGRAM_CHAT_ID   = "6137131451"; // <-- PEGÁ TU CHAT_ID REAL (persona o grupo)
-
-    // Productos
     const PRODUCTS = [
       { id:"box12", name:"Caja 12 (clásica)", desc:"12 piezas surtidas (maki + nigiri).", price: 9900, images: ["assets/box-12-1.jpeg","assets/box-12-2.jpeg"] },
       { id:"box18", name:"Caja 18 (premium)", desc:"18 piezas surtidas + 1 salsa especial.", price: 14900, images: ["assets/box-18-1.jpeg","assets/box-18-2.jpeg"] },
@@ -447,15 +437,42 @@
       window.scrollTo({top:0, behavior:"smooth"});
     }
 
-    function sendToTelegram(text){
-      return fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    // =========================
+    // TELEGRAM (con validación + split por largo)
+    // =========================
+    async function telegramSendOne(part){
+      const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: text
-        })
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: part })
       });
+
+      const data = await res.json().catch(() => null);
+      console.log("Telegram response:", res.status, data);
+
+      if(!res.ok || !data || !data.ok){
+        throw new Error("Telegram error: " + JSON.stringify(data || { http_status: res.status }));
+      }
+      return data;
+    }
+
+    async function sendToTelegram(text){
+      if(!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID){
+        throw new Error("Falta TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID");
+      }
+
+      // Telegram sendMessage límite ~4096 chars. Cortamos un poco antes.
+      const MAX = 3900;
+      const parts = [];
+      for(let i=0; i<text.length; i += MAX){
+        parts.push(text.slice(i, i + MAX));
+      }
+
+      // Enviamos parte por parte (en orden)
+      for(let idx=0; idx<parts.length; idx++){
+        const prefix = (parts.length > 1) ? `(${idx+1}/${parts.length}) ` : "";
+        await telegramSendOne(prefix + parts[idx]);
+      }
     }
 
     // =========================
@@ -655,26 +672,33 @@
       const orderId = genOrderId();
       const summary = buildSummary(orderId);
 
-      // Envío a Telegram (si token/chat_id están configurados)
+      console.log("Summary length:", summary.length);
+      console.log(summary);
+
+      const oldText = btnCheckout.textContent;
+      btnCheckout.disabled = true;
+      btnCheckout.textContent = "Enviando…";
+
       try{
         await sendToTelegram(summary);
+
+        // Solo si Telegram confirmó OK, mostramos pantalla enviada
+        sentDetailsEl.textContent = summary;
+        showScreen("screenSent");
+        clearCart();
       }catch(e){
-        // Si falla, igual mostramos enviado (para no frenar al cliente)
+        alert("No se pudo enviar el pedido a Telegram.\n\n" + e.message + "\n\nAbrí F12 > Console para ver más.");
         console.error("Telegram send failed:", e);
+      }finally{
+        btnCheckout.disabled = false;
+        btnCheckout.textContent = oldText;
       }
-
-      // Mostramos pantalla "enviado" y limpiamos carro
-      sentDetailsEl.textContent = summary;
-      showScreen("screenSent");
-
-      clearCart(); // limpia y actualiza UI del main
     });
 
     // =========================
     // NUEVO PEDIDO
     // =========================
     document.getElementById("btnNewOrder").addEventListener("click", () => {
-      // Limpia campos
       document.getElementById("name").value = "";
       document.getElementById("phone").value = "";
       document.getElementById("address").value = "";
@@ -683,7 +707,6 @@
       document.getElementById("notes").value = "";
       document.getElementById("shipping").value = "0";
 
-      // Vuelve a la pantalla principal
       showScreen("screenMain");
       renderCart();
     });
@@ -692,7 +715,6 @@
     // WhatsApp Floating Button
     // =========================
     document.getElementById("waFloat").addEventListener("click", () => {
-      // Abre WhatsApp (chat con el local). Si preferís solo "abrir WhatsApp" sin número, avisame.
       const url = `https://wa.me/${WHATSAPP_NUMBER}`;
       window.open(url, "_blank", "noopener,noreferrer");
     });
