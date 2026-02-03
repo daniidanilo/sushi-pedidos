@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sushi — Pedidos</title>
+  <style>
+    :root{
+      --bg:#0b0d10; --card:#12161b; --muted:#9aa6b2; --text:#e9eef3;
+      --brand:#19c37d; --danger:#ff5c5c; --line:#1f2630;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:linear-gradient(180deg,#0b0d10,#0b0d10 40%,#07080a);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      background:rgba(11,13,16,.92); backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background: radial-gradient(circle at 30% 30%, #2df1a0, #19c37d 60%, #0f6b46);
+      box-shadow: 0 10px 30px rgba(25,195,125,.25);
+    }
+    .brand h1{font-size:16px;margin:0}
+    .brand small{color:var(--muted)}
+    .cartBadge{
+      display:flex;gap:10px;align-items:center;
+      background:var(--card); border:1px solid var(--line);
+      padding:10px 12px;border-radius:14px;
+    }
+    .pill{
+      background:#0f141a;border:1px solid var(--line);
+      padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px
+    }
+    .btn{
+      border:1px solid var(--line);
+      background: #0f141a;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:.15s transform ease, .15s opacity ease, .15s border ease;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); border-color:#2b3645}
+    .btn:active{transform: translateY(0px); opacity:.9}
+    .btnPrimary{
+      background: linear-gradient(180deg,#1fe08f,#19c37d);
+      border-color: transparent;
+      color:#062215;
+      font-weight:700;
+    }
+    .btnDanger{border-color:#3a1e1e;color:#ffd0d0;background:#140c0c}
+    main{padding:18px 0 40px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap:16px;
+    }
+    @media (max-width: 920px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background:rgba(18,22,27,.9);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .sectionTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .sectionTitle h2{margin:0;font-size:14px}
+    .sectionTitle span{color:var(--muted);font-size:12px}
+    .products{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:12px;
+    }
+    @media (max-width: 520px){
+      .products{grid-template-columns: 1fr}
+    }
+    .product{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background: linear-gradient(180deg, rgba(15,20,26,.9), rgba(15,20,26,.55));
+    }
+    .product h3{margin:0 0 4px 0;font-size:14px}
+    .product p{margin:0 0 10px 0;color:var(--muted);font-size:12px;line-height:1.35}
+    .priceRow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .price{font-weight:800}
+    .muted{color:var(--muted)}
+    .cartList{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .cartItem{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      background:rgba(15,20,26,.6);
+    }
+    .cartItem h4{margin:0;font-size:13px}
+    .cartItem small{color:var(--muted)}
+    .qty{
+      display:flex;align-items:center;gap:8px;justify-content:flex-end;
+      min-width:170px;
+    }
+    .qty .btn{padding:7px 10px;border-radius:10px}
+    .qtyNum{
+      min-width:26px;text-align:center;font-weight:800
+    }
+    .row{display:flex;justify-content:space-between;gap:12px;margin:10px 0;color:var(--muted)}
+    .row strong{color:var(--text)}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .form{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media (max-width: 520px){ .form{grid-template-columns:1fr} }
+    label{font-size:12px;color:var(--muted)}
+    input, textarea, select{
+      width:100%;
+      margin-top:6px;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:#0f141a;
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:78px;resize:vertical}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .notice{font-size:12px;color:var(--muted);line-height:1.4}
+    .okBox{
+      display:none;
+      border:1px solid rgba(25,195,125,.35);
+      background: rgba(25,195,125,.08);
+      padding:12px;border-radius:16px;margin-top:12px
+    }
+    .okBox h3{margin:0 0 6px 0;font-size:14px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Sushi Pedidos</h1>
+          <small>Argentina · catálogo → carrito → envío → finalizar</small>
+        </div>
+      </div>
+
+      <div class="cartBadge">
+        <span class="pill" id="itemsPill">0 ítems</span>
+        <span class="pill" id="totalPill">$0</span>
+        <button class="btn" id="btnClear" title="Vaciar carrito">Vaciar</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap grid">
+    <!-- Productos -->
+    <section class="card">
+      <div class="sectionTitle">
+        <h2>Productos</h2>
+        <span>Elegí tus cajas</span>
+      </div>
+
+      <div class="products" id="products"></div>
+
+      <div class="divider"></div>
+      <div class="notice">
+        Tip: esto está pensado para arrancar rápido sin backend. Cuando quieras, lo conectamos a un backend (FastAPI / Firebase) para registrar pedidos, stock y pagos.
+      </div>
+    </section>
+
+    <!-- Carrito + Dirección + Finalizar -->
+    <aside class="card">
+      <div class="sectionTitle">
+        <h2>Carrito</h2>
+        <span id="cartHint" class="muted">Agregá productos para continuar</span>
+      </div>
+
+      <div class="cartList" id="cartList"></div>
+
+      <div class="divider"></div>
+
+      <div class="row"><span>Subtotal</span><strong id="subtotal">$0</strong></div>
+      <div class="row">
+        <span>Envío</span>
+        <div style="display:flex; gap:8px; align-items:center">
+          <select id="shipping">
+            <option value="0">Retiro por el local ($0)</option>
+            <option value="800">Envío cercano ($800)</option>
+            <option value="1500">Envío estándar ($1500)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row"><span>Total</span><strong id="total">$0</strong></div>
+
+      <div class="divider"></div>
+
+      <div class="sectionTitle">
+        <h2>Dirección de envío</h2>
+        <span class="muted">Datos del pedido</span>
+      </div>
+
+      <div class="form">
+        <div>
+          <label>Nombre</label>
+          <input id="name" placeholder="Tu nombre" />
+        </div>
+        <div>
+          <label>Teléfono</label>
+          <input id="phone" placeholder="+54 ..." />
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <label>Dirección (calle y número)</label>
+          <input id="address" placeholder="Ej: Av. Siempre Viva 742" />
+        </div>
+        <div>
+          <label>Ciudad</label>
+          <input id="city" placeholder="Ej: CABA" />
+        </div>
+        <div>
+          <label>CP</label>
+          <input id="zip" placeholder="Ej: 1425" />
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <label>Notas (timbre, piso, salsa, sin wasabi, etc.)</label>
+          <textarea id="notes" placeholder="Opcional"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btnPrimary" id="btnCheckout">Finalizar compra</button>
+        <button class="btn" id="btnWhatsApp" disabled>Enviar por WhatsApp</button>
+      </div>
+
+      <div class="okBox" id="okBox">
+        <h3>Pedido listo ✅</h3>
+        <div class="notice">
+          ID: <span class="mono" id="orderId">—</span><br/>
+          Copiá el resumen o envialo por WhatsApp.
+        </div>
+        <div class="divider"></div>
+        <pre class="mono" id="summary" style="white-space:pre-wrap;margin:0;color:#dfe7ee;font-size:12px"></pre>
+      </div>
+
+      <div class="divider"></div>
+      <div class="notice">
+        *Precios en ARS. Esto no procesa pago; solo arma el pedido. Si querés pago online (Mercado Pago / transferencia / tarjeta), lo sumamos después.
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  // ==== Config rápida ====
+  const WHATSAPP_NUMBER = "5491112345678"; // <-- CAMBIÁ ESTO (sin +, sin espacios). Ej: 54911xxxxxxx
+
+  const PRODUCTS = [
+    { id:"box12", name:"Caja 12 (clásica)", desc:"12 piezas surtidas (maki + nigiri).", price: 9900 },
+    { id:"box18", name:"Caja 18 (premium)", desc:"18 piezas surtidas + 1 salsa especial.", price: 14900 },
+    { id:"box24", name:"Caja 24 (familia)", desc:"24 piezas surtidas para compartir.", price: 18900 },
+    { id:"box30", name:"Caja 30 (fiesta)", desc:"30 piezas + 2 salsas + jengibre.", price: 23900 }
+  ];
+
+  const money = (n) => n.toLocaleString("es-AR", { style:"currency", currency:"ARS", maximumFractionDigits:0 });
+
+  // ==== Estado ====
+  const LS_KEY = "sushi_cart_v1";
+  let cart = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+
+  // ==== Render productos ====
+  const productsEl = document.getElementById("products");
+  productsEl.innerHTML = PRODUCTS.map(p => `
+    <div class="product">
+      <h3>${p.name}</h3>
+      <p>${p.desc}</p>
+      <div class="priceRow">
+        <div>
+          <div class="price">${money(p.price)}</div>
+          <div class="muted" style="font-size:12px">por caja</div>
+        </div>
+        <button class="btn btnPrimary" onclick="addToCart('${p.id}')">Agregar</button>
+      </div>
+    </div>
+  `).join("");
+
+  // ==== Carrito ====
+  const cartListEl = document.getElementById("cartList");
+  const itemsPill = document.getElementById("itemsPill");
+  const totalPill = document.getElementById("totalPill");
+  const subtotalEl = document.getElementById("subtotal");
+  const totalEl = document.getElementById("total");
+  const cartHint = document.getElementById("cartHint");
+  const shippingEl = document.getElementById("shipping");
+  const btnClear = document.getElementById("btnClear");
+  const btnCheckout = document.getElementById("btnCheckout");
+  const btnWhatsApp = document.getElementById("btnWhatsApp");
+  const okBox = document.getElementById("okBox");
+  const orderIdEl = document.getElementById("orderId");
+  const summaryEl = document.getElementById("summary");
+
+  function saveCart(){
+    localStorage.setItem(LS_KEY, JSON.stringify(cart));
+  }
+
+  function addToCart(id){
+    cart[id] = (cart[id] || 0) + 1;
+    saveCart();
+    renderCart();
+  }
+  function decFromCart(id){
+    if(!cart[id]) return;
+    cart[id] -= 1;
+    if(cart[id] <= 0) delete cart[id];
+    saveCart();
+    renderCart();
+  }
+  function removeItem(id){
+    delete cart[id];
+    saveCart();
+    renderCart();
+  }
+  function clearCart(){
+    cart = {};
+    saveCart();
+    renderCart();
+  }
+
+  function calcSubtotal(){
+    let s = 0;
+    for(const [id, qty] of Object.entries(cart)){
+      const p = PRODUCTS.find(x => x.id === id);
+      if(p) s += p.price * qty;
+    }
+    return s;
+  }
+
+  function getCartItemsCount(){
+    return Object.values(cart).reduce((a,b)=>a+b,0);
+  }
+
+  function renderCart(){
+    okBox.style.display = "none";
+    btnWhatsApp.disabled = true;
+
+    const count = getCartItemsCount();
+    itemsPill.textContent = `${count} ítems`;
+
+    if(count === 0){
+      cartHint.textContent = "Agregá productos para continuar";
+      cartListEl.innerHTML = `<div class="muted">Carrito vacío.</div>`;
+    }else{
+      cartHint.textContent = "Revisá cantidades";
+      cartListEl.innerHTML = Object.entries(cart).map(([id, qty]) => {
+        const p = PRODUCTS.find(x => x.id === id);
+        if(!p) return "";
+        const line = p.price * qty;
+        return `
+          <div class="cartItem">
+            <div>
+              <h4>${p.name}</h4>
+              <small>${money(p.price)} · Línea: <strong>${money(line)}</strong></small>
+            </div>
+            <div class="qty">
+              <button class="btn" onclick="decFromCart('${id}')">−</button>
+              <div class="qtyNum">${qty}</div>
+              <button class="btn" onclick="addToCart('${id}')">+</button>
+              <button class="btn btnDanger" onclick="removeItem('${id}')" title="Eliminar">✕</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    const sub = calcSubtotal();
+    const ship = Number(shippingEl.value || 0);
+    const tot = sub + ship;
+
+    subtotalEl.textContent = money(sub);
+    totalEl.textContent = money(tot);
+    totalPill.textContent = money(tot);
+  }
+
+  shippingEl.addEventListener("change", renderCart);
+  btnClear.addEventListener("click", clearCart);
+
+  function validateCheckout(){
+    const count = getCartItemsCount();
+    if(count === 0) return { ok:false, msg:"El carrito está vacío." };
+
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const city = document.getElementById("city").value.trim();
+
+    // Si eligieron retiro, dirección puede ser vacía
+    const isPickup = Number(shippingEl.value) === 0;
+
+    if(!name) return { ok:false, msg:"Falta tu nombre." };
+    if(!phone) return { ok:false, msg:"Falta tu teléfono." };
+    if(!isPickup){
+      if(!address) return { ok:false, msg:"Falta la dirección." };
+      if(!city) return { ok:false, msg:"Falta la ciudad." };
+    }
+    return { ok:true };
+  }
+
+  function buildSummary(orderId){
+    const sub = calcSubtotal();
+    const ship = Number(shippingEl.value || 0);
+    const tot = sub + ship;
+
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const city = document.getElementById("city").value.trim();
+    const zip = document.getElementById("zip").value.trim();
+    const notes = document.getElementById("notes").value.trim();
+    const isPickup = ship === 0;
+
+    const lines = [];
+    lines.push(`Pedido Sushi — ID ${orderId}`);
+    lines.push(`Cliente: ${name}`);
+    lines.push(`Tel: ${phone}`);
+    lines.push(isPickup ? `Entrega: Retiro por el local` : `Entrega: Envío`);
+    if(!isPickup){
+      lines.push(`Dirección: ${address}`);
+      lines.push(`Ciudad: ${city}${zip ? " · CP "+zip : ""}`);
+    }
+    if(notes) lines.push(`Notas: ${notes}`);
+    lines.push("");
+    lines.push("Items:");
+    for(const [id, qty] of Object.entries(cart)){
+      const p = PRODUCTS.find(x => x.id === id);
+      if(!p) continue;
+      lines.push(`- ${qty} x ${p.name} (${money(p.price)}) = ${money(p.price*qty)}`);
+    }
+    lines.push("");
+    lines.push(`Subtotal: ${money(sub)}`);
+    lines.push(`Envío: ${money(ship)}`);
+    lines.push(`TOTAL: ${money(tot)}`);
+    return lines.join("\n");
+  }
+
+  function genOrderId(){
+    const t = Date.now().toString(36).toUpperCase();
+    const r = Math.random().toString(36).slice(2,6).toUpperCase();
+    return `${t}-${r}`;
+  }
+
+  btnCheckout.addEventListener("click", () => {
+    const v = validateCheckout();
+    if(!v.ok){
+      alert(v.msg);
+      return;
+    }
+    const id = genOrderId();
+    const summary = buildSummary(id);
+
+    orderIdEl.textContent = id;
+    summaryEl.textContent = summary;
+    okBox.style.display = "block";
+    btnWhatsApp.disabled = false;
+
+    // Scroll a la confirmación en mobile
+    okBox.scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  btnWhatsApp.addEventListener("click", () => {
+    const id = orderIdEl.textContent || genOrderId();
+    const summary = buildSummary(id);
+    const text = encodeURIComponent(summary);
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+
+  // Init
+  renderCart();
+</script>
+</body>
+</html>
