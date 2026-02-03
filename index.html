@@ -7,7 +7,6 @@
   <style>
     :root{
       --bg:#0b0d10; --card:#12161b; --muted:#9aa6b2; --text:#e9eef3;
-      /* ✅ Brand rojizo (estilo sakura / caja negra-roja) */
       --brand:#d14b4b;
       --brand2:#b51f2b;
       --danger:#ff5c5c; --line:#1f2630;
@@ -81,7 +80,6 @@
     .sectionTitle h2{margin:0;font-size:14px}
     .sectionTitle span{color:var(--muted);font-size:12px}
 
-    /* ✅ Mobile-first: en cel se ve 1 columna, en pantallas grandes 2 */
     .products{
       display:grid;
       grid-template-columns: 1fr;
@@ -94,11 +92,10 @@
     .product{
       border:1px solid var(--line);
       border-radius:16px;
-      overflow:hidden; /* importante para recorte de imágenes */
+      overflow:hidden;
       background: linear-gradient(180deg, rgba(15,20,26,.9), rgba(15,20,26,.55));
     }
 
-    /* ✅ Carrusel de imágenes (swipe en mobile) */
     .mediaStrip{
       display:flex;
       overflow-x:auto;
@@ -113,7 +110,7 @@
     .media{
       flex:0 0 100%;
       scroll-snap-align:start;
-      aspect-ratio: 4 / 3; /* ✅ todos los recuadros mismo tamaño */
+      aspect-ratio: 4 / 3;
       width:100%;
       object-fit:cover;
       display:block;
@@ -177,39 +174,16 @@
     }
     .okBox h3{margin:0 0 6px 0;font-size:14px}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
-  
-     /* =========================
-       LOGO HEADER (OPCIÓN B)
-       ========================= */
-    .brandText {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
 
-    .brandMark {
-      margin-top: 4px;
-    }
-
+    .brandText {display:flex;flex-direction:column;gap:2px;}
+    .brandMark {margin-top:4px;}
     .brandImg {
-      height: 26px;
-      width: auto;
-      display: block;
-      border-radius: 8px;
+      height: 26px; width: auto; display:block; border-radius: 8px;
       filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
     }
-
-    @media (max-width: 380px) {
-      .brandImg {
-        height: 22px;
-      }
-    }
-
-    .brandFallback {
-      color: var(--muted);
-      font-size: 12px;
-    }
-</style>
+    @media (max-width: 380px) { .brandImg { height: 22px; } }
+    .brandFallback { color: var(--muted); font-size: 12px; }
+  </style>
 </head>
 <body>
   <header>
@@ -221,7 +195,6 @@
           <div class="brandText">
             <h1>Minato Madero</h1>
 
-            <!-- Logo de marca (reemplaza el texto descriptivo) -->
             <div class="brandMark">
               <img
                 src="assets/brand-logo.png"
@@ -230,387 +203,410 @@
                 loading="lazy"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
               />
-
-              <!-- Fallback si la imagen no carga -->
               <span class="brandFallback" style="display:none;">
                 Pedidos · Sushi
               </span>
             </div>
           </div>
-
         </div>
 
-      <div class="cartBadge">
-        <span class="pill" id="itemsPill">0 ítems</span>
-        <span class="pill" id="totalPill">$0</span>
-        <button class="btn" id="btnClear" title="Vaciar carrito">Vaciar</button>
+        <div class="cartBadge">
+          <span class="pill" id="itemsPill">0 ítems</span>
+          <span class="pill" id="totalPill">$0</span>
+          <button class="btn" id="btnClear" title="Vaciar carrito">Vaciar</button>
+        </div>
       </div>
     </div>
-  </div>
-</header>
+  </header>
 
-<main>
-  <div class="wrap grid">
-    <!-- Productos -->
-    <section class="card">
-      <div class="sectionTitle">
-        <h2>Productos</h2>
-        <span>Elegí tus cajas</span>
-      </div>
-
-      <div class="products" id="products"></div>
-
-      <div class="divider"></div>
-      <div class="notice">
-        Tip: esto está pensado para arrancar rápido sin backend. Cuando quieras, lo conectamos a un backend (FastAPI / Firebase) para registrar pedidos, stock y pagos.
-      </div>
-    </section>
-
-    <!-- Carrito + Dirección + Finalizar -->
-    <aside class="card">
-      <div class="sectionTitle">
-        <h2>Carrito</h2>
-        <span id="cartHint" class="muted">Agregá productos para continuar</span>
-      </div>
-
-      <div class="cartList" id="cartList"></div>
-
-      <div class="divider"></div>
-
-      <div class="row"><span>Subtotal</span><strong id="subtotal">$0</strong></div>
-      <div class="row">
-        <span>Envío</span>
-        <div style="display:flex; gap:8px; align-items:center">
-          <select id="shipping">
-            <option value="0">Retiro por el local ($0)</option>
-            <option value="800">Envío cercano ($800)</option>
-            <option value="1500">Envío estándar ($1500)</option>
-          </select>
+  <main>
+    <div class="wrap grid">
+      <section class="card">
+        <div class="sectionTitle">
+          <h2>Productos</h2>
+          <span>Elegí tus cajas</span>
         </div>
-      </div>
-      <div class="row"><span>Total</span><strong id="total">$0</strong></div>
 
-      <div class="divider"></div>
+        <div class="products" id="products"></div>
 
-      <div class="sectionTitle">
-        <h2>Dirección de envío</h2>
-        <span class="muted">Datos del pedido</span>
-      </div>
-
-      <div class="form">
-        <div>
-          <label>Nombre</label>
-          <input id="name" placeholder="Tu nombre" />
-        </div>
-        <div>
-          <label>Teléfono</label>
-          <input id="phone" placeholder="+54 ..." />
-        </div>
-        <div style="grid-column: 1 / -1;">
-          <label>Dirección (calle y número, piso y dpto)</label>
-          <input id="address" placeholder="Ej: Olga Cossetini 1171 6 "A" " />
-        </div>
-        <div>
-          <label>Ciudad</label>
-          <input id="city" placeholder="Ej: CABA" />
-        </div>
-        <div>
-          <label>CP</label>
-          <input id="zip" placeholder="Ej: 1107" />
-        </div>
-        <div style="grid-column: 1 / -1;">
-          <label>Notas (timbre, piso, salsa, sin wasabi, etc.)</label>
-          <textarea id="notes" placeholder="Opcional"></textarea>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button class="btn btnPrimary" id="btnCheckout">Finalizar compra</button>
-        <button class="btn" id="btnWhatsApp" disabled>Enviar por WhatsApp</button>
-      </div>
-
-      <div class="okBox" id="okBox">
-        <h3>Pedido listo ✅</h3>
-        <div class="notice">
-          ID: <span class="mono" id="orderId">—</span><br/>
-          Copiá el resumen o envialo por WhatsApp.
-        </div>
         <div class="divider"></div>
-        <pre class="mono" id="summary" style="white-space:pre-wrap;margin:0;color:#dfe7ee;font-size:12px"></pre>
-      </div>
+        <div class="notice">
+          Tip: esto está pensado para arrancar rápido sin backend. Cuando quieras, lo conectamos a un backend (FastAPI / Firebase) para registrar pedidos, stock y pagos.
+        </div>
+      </section>
 
-      <div class="divider"></div>
-      <div class="notice">
-        *Precios en ARS. Esto no procesa pago; solo arma el pedido. Si querés pago online (Mercado Pago / transferencia / tarjeta), lo sumamos después.
-      </div>
-    </aside>
-  </div>
-</main>
+      <aside class="card">
+        <div class="sectionTitle">
+          <h2>Carrito</h2>
+          <span id="cartHint" class="muted">Agregá productos para continuar</span>
+        </div>
 
-<script>
-  // ==== Config rápida ====
-  const WHATSAPP_NUMBER = "5491112345678"; // <-- CAMBIÁ ESTO (sin +, sin espacios). Ej: 54911xxxxxxx
+        <div class="cartList" id="cartList"></div>
 
-  // ✅ Poné tus imágenes en /assets y actualizá estas rutas:
-  // Ej: assets/box12-1.jpeg, assets/box12-2.jpeg, assets/box12-3.jpeg
-  const PRODUCTS = [
-    {
-      id:"box12",
-      name:"Caja 12 (clásica)",
-      desc:"12 piezas surtidas (maki + nigiri).",
-      price: 9900,
-      images: ["assets/box-12-1.jpeg","assets/box-12-2.jpeg"]
-    },
-    {
-      id:"box18",
-      name:"Caja 18 (premium)",
-      desc:"18 piezas surtidas + 1 salsa especial.",
-      price: 14900,
-      images: ["assets/box-18-1.jpeg","assets/box-18-2.jpeg"]
-    },
-    {
-      id:"box24",
-      name:"Caja 24 (familia)",
-      desc:"24 piezas surtidas para compartir.",
-      price: 18900,
-      images: ["assets/box-24-1.jpeg","assets/box-24-2.jpeg"]
-    },
-    {
-      id:"box30",
-      name:"Caja 30 (fiesta)",
-      desc:"30 piezas + 2 salsas + jengibre.",
-      price: 23900,
-      images: ["assets/box-30-1.jpeg","assets/box-30-2.jpeg"]
-    }
-  ];
+        <div class="divider"></div>
 
-  const money = (n) => n.toLocaleString("es-AR", { style:"currency", currency:"ARS", maximumFractionDigits:0 });
-
-  // ==== Estado ====
-  const LS_KEY = "sushi_cart_v1";
-  let cart = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-
-  // ==== Render productos ====
-  const productsEl = document.getElementById("products");
-
-  function renderProducts(){
-    productsEl.innerHTML = PRODUCTS.map(p => {
-      const imgs = (p.images && p.images.length)
-        ? p.images.map((src, i) => `<img class="media" loading="lazy" src="${src}" alt="${p.name} foto ${i+1}">`).join("")
-        : `<img class="media" loading="lazy" src="assets/placeholder.jpeg" alt="${p.name}">`;
-
-      return `
-        <div class="product">
-          <div class="mediaStrip" aria-label="Imágenes de ${p.name}">
-            ${imgs}
-          </div>
-          <div class="productBody">
-            <h3>${p.name}</h3>
-            <p>${p.desc}</p>
-            <div class="priceRow">
-              <div>
-                <div class="price">${money(p.price)}</div>
-                <div class="muted" style="font-size:12px">por caja</div>
-              </div>
-              <button class="btn btnPrimary" onclick="addToCart('${p.id}')">Agregar</button>
-            </div>
+        <div class="row"><span>Subtotal</span><strong id="subtotal">$0</strong></div>
+        <div class="row">
+          <span>Envío</span>
+          <div style="display:flex; gap:8px; align-items:center">
+            <select id="shipping">
+              <option value="0">Retiro por el local ($0)</option>
+              <option value="800">Envío cercano ($800)</option>
+              <option value="1500">Envío estándar ($1500)</option>
+            </select>
           </div>
         </div>
-      `;
-    }).join("");
-  }
+        <div class="row"><span>Total</span><strong id="total">$0</strong></div>
 
-  // ==== Carrito ====
-  const cartListEl = document.getElementById("cartList");
-  const itemsPill = document.getElementById("itemsPill");
-  const totalPill = document.getElementById("totalPill");
-  const subtotalEl = document.getElementById("subtotal");
-  const totalEl = document.getElementById("total");
-  const cartHint = document.getElementById("cartHint");
-  const shippingEl = document.getElementById("shipping");
-  const btnClear = document.getElementById("btnClear");
-  const btnCheckout = document.getElementById("btnCheckout");
-  const btnWhatsApp = document.getElementById("btnWhatsApp");
-  const okBox = document.getElementById("okBox");
-  const orderIdEl = document.getElementById("orderId");
-  const summaryEl = document.getElementById("summary");
+        <div class="divider"></div>
 
-  function saveCart(){
-    localStorage.setItem(LS_KEY, JSON.stringify(cart));
-  }
+        <div class="sectionTitle">
+          <h2>Dirección de envío</h2>
+          <span class="muted">Datos del pedido</span>
+        </div>
 
-  function addToCart(id){
-    cart[id] = (cart[id] || 0) + 1;
-    saveCart();
-    renderCart();
-  }
-  function decFromCart(id){
-    if(!cart[id]) return;
-    cart[id] -= 1;
-    if(cart[id] <= 0) delete cart[id];
-    saveCart();
-    renderCart();
-  }
-  function removeItem(id){
-    delete cart[id];
-    saveCart();
-    renderCart();
-  }
-  function clearCart(){
-    cart = {};
-    saveCart();
-    renderCart();
-  }
+        <div class="form">
+          <div>
+            <label>Nombre</label>
+            <input id="name" placeholder="Tu nombre" />
+          </div>
+          <div>
+            <label>Teléfono</label>
+            <input id="phone" placeholder="+54 ..." />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Dirección (calle y número, piso y dpto)</label>
+            <input id="address" placeholder='Ej: Olga Cossetini 1171 6 "A"' />
+          </div>
+          <div>
+            <label>Ciudad</label>
+            <input id="city" placeholder="Ej: CABA" />
+          </div>
+          <div>
+            <label>CP</label>
+            <input id="zip" placeholder="Ej: 1107" />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Notas (timbre, piso, salsa, sin wasabi, etc.)</label>
+            <textarea id="notes" placeholder="Opcional"></textarea>
+          </div>
+        </div>
 
-  function calcSubtotal(){
-    let s = 0;
-    for(const [id, qty] of Object.entries(cart)){
-      const p = PRODUCTS.find(x => x.id === id);
-      if(p) s += p.price * qty;
+        <div class="actions">
+          <button class="btn btnPrimary" id="btnCheckout">Finalizar compra</button>
+          <button class="btn" id="btnWhatsApp" disabled>Enviar por WhatsApp</button>
+        </div>
+
+        <div class="okBox" id="okBox">
+          <h3>Pedido listo ✅</h3>
+          <div class="notice">
+            ID: <span class="mono" id="orderId">—</span><br/>
+            Copiá el resumen o envialo por WhatsApp.
+          </div>
+          <div class="divider"></div>
+          <pre class="mono" id="summary" style="white-space:pre-wrap;margin:0;color:#dfe7ee;font-size:12px"></pre>
+        </div>
+
+        <div class="divider"></div>
+        <div class="notice">
+          *Precios en ARS. Esto no procesa pago; solo arma el pedido. Si querés pago online (Mercado Pago / transferencia / tarjeta), lo sumamos después.
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // ==== Config rápida ====
+    const WHATSAPP_NUMBER = "5491112345678"; // <-- CAMBIÁ ESTO (sin +, sin espacios). Ej: 54911xxxxxxx
+
+    // ✅ Telegram (SIN backend)
+    // 1) Creá bot en @BotFather -> te da BOT_TOKEN
+    // 2) Mandale "hola" al bot
+    // 3) Abrí: https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
+    // 4) Copiá el chat.id (persona o grupo) y pegalo abajo
+    const TELEGRAM_BOT_TOKEN = "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0"; // <-- PEGÁ ACÁ TU TOKEN REAL
+    const TELEGRAM_CHAT_ID   = "6137131451"; // <-- PEGÁ ACÁ TU CHAT_ID (persona o grupo)
+
+    // ✅ Poné tus imágenes en /assets y actualizá estas rutas:
+    const PRODUCTS = [
+      {
+        id:"box12",
+        name:"Caja 12 (clásica)",
+        desc:"12 piezas surtidas (maki + nigiri).",
+        price: 9900,
+        images: ["assets/box-12-1.jpeg","assets/box-12-2.jpeg"]
+      },
+      {
+        id:"box18",
+        name:"Caja 18 (premium)",
+        desc:"18 piezas surtidas + 1 salsa especial.",
+        price: 14900,
+        images: ["assets/box-18-1.jpeg","assets/box-18-2.jpeg"]
+      },
+      {
+        id:"box24",
+        name:"Caja 24 (familia)",
+        desc:"24 piezas surtidas para compartir.",
+        price: 18900,
+        images: ["assets/box-24-1.jpeg","assets/box-24-2.jpeg"]
+      },
+      {
+        id:"box30",
+        name:"Caja 30 (fiesta)",
+        desc:"30 piezas + 2 salsas + jengibre.",
+        price: 23900,
+        images: ["assets/box-30-1.jpeg","assets/box-30-2.jpeg"]
+      }
+    ];
+
+    const money = (n) => n.toLocaleString("es-AR", { style:"currency", currency:"ARS", maximumFractionDigits:0 });
+
+    // ==== Estado ====
+    const LS_KEY = "sushi_cart_v1";
+    let cart = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+
+    // ==== Telegram sender ====
+    function sendToTelegram(text){
+      // Si no configuraste aún, no rompe nada:
+      if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === "BABITABABABA") return;
+      if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "BABITABABABA") return;
+
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: text
+        })
+      }).catch(err => console.error("Telegram error:", err));
     }
-    return s;
-  }
 
-  function getCartItemsCount(){
-    return Object.values(cart).reduce((a,b)=>a+b,0);
-  }
+    // ==== Render productos ====
+    const productsEl = document.getElementById("products");
 
-  function renderCart(){
-    okBox.style.display = "none";
-    btnWhatsApp.disabled = true;
+    function renderProducts(){
+      productsEl.innerHTML = PRODUCTS.map(p => {
+        const imgs = (p.images && p.images.length)
+          ? p.images.map((src, i) => `<img class="media" loading="lazy" src="${src}" alt="${p.name} foto ${i+1}">`).join("")
+          : `<img class="media" loading="lazy" src="assets/placeholder.jpeg" alt="${p.name}">`;
 
-    const count = getCartItemsCount();
-    itemsPill.textContent = `${count} ítems`;
-
-    if(count === 0){
-      cartHint.textContent = "Agregá productos para continuar";
-      cartListEl.innerHTML = `<div class="muted">Carrito vacío.</div>`;
-    }else{
-      cartHint.textContent = "Revisá cantidades";
-      cartListEl.innerHTML = Object.entries(cart).map(([id, qty]) => {
-        const p = PRODUCTS.find(x => x.id === id);
-        if(!p) return "";
-        const line = p.price * qty;
         return `
-          <div class="cartItem">
-            <div>
-              <h4>${p.name}</h4>
-              <small>${money(p.price)} · Línea: <strong>${money(line)}</strong></small>
+          <div class="product">
+            <div class="mediaStrip" aria-label="Imágenes de ${p.name}">
+              ${imgs}
             </div>
-            <div class="qty">
-              <button class="btn" onclick="decFromCart('${id}')">−</button>
-              <div class="qtyNum">${qty}</div>
-              <button class="btn" onclick="addToCart('${id}')">+</button>
-              <button class="btn btnDanger" onclick="removeItem('${id}')" title="Eliminar">✕</button>
+            <div class="productBody">
+              <h3>${p.name}</h3>
+              <p>${p.desc}</p>
+              <div class="priceRow">
+                <div>
+                  <div class="price">${money(p.price)}</div>
+                  <div class="muted" style="font-size:12px">por caja</div>
+                </div>
+                <button class="btn btnPrimary" onclick="addToCart('${p.id}')">Agregar</button>
+              </div>
             </div>
           </div>
         `;
       }).join("");
     }
 
-    const sub = calcSubtotal();
-    const ship = Number(shippingEl.value || 0);
-    const tot = sub + ship;
+    // ==== Carrito ====
+    const cartListEl = document.getElementById("cartList");
+    const itemsPill = document.getElementById("itemsPill");
+    const totalPill = document.getElementById("totalPill");
+    const subtotalEl = document.getElementById("subtotal");
+    const totalEl = document.getElementById("total");
+    const cartHint = document.getElementById("cartHint");
+    const shippingEl = document.getElementById("shipping");
+    const btnClear = document.getElementById("btnClear");
+    const btnCheckout = document.getElementById("btnCheckout");
+    const btnWhatsApp = document.getElementById("btnWhatsApp");
+    const okBox = document.getElementById("okBox");
+    const orderIdEl = document.getElementById("orderId");
+    const summaryEl = document.getElementById("summary");
 
-    subtotalEl.textContent = money(sub);
-    totalEl.textContent = money(tot);
-    totalPill.textContent = money(tot);
-  }
-
-  shippingEl.addEventListener("change", renderCart);
-  btnClear.addEventListener("click", clearCart);
-
-  function validateCheckout(){
-    const count = getCartItemsCount();
-    if(count === 0) return { ok:false, msg:"El carrito está vacío." };
-
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const address = document.getElementById("address").value.trim();
-    const city = document.getElementById("city").value.trim();
-
-    const isPickup = Number(shippingEl.value) === 0;
-
-    if(!name) return { ok:false, msg:"Falta tu nombre." };
-    if(!phone) return { ok:false, msg:"Falta tu teléfono." };
-    if(!isPickup){
-      if(!address) return { ok:false, msg:"Falta la dirección." };
-      if(!city) return { ok:false, msg:"Falta la ciudad." };
+    function saveCart(){
+      localStorage.setItem(LS_KEY, JSON.stringify(cart));
     }
-    return { ok:true };
-  }
 
-  function buildSummary(orderId){
-    const sub = calcSubtotal();
-    const ship = Number(shippingEl.value || 0);
-    const tot = sub + ship;
-
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const address = document.getElementById("address").value.trim();
-    const city = document.getElementById("city").value.trim();
-    const zip = document.getElementById("zip").value.trim();
-    const notes = document.getElementById("notes").value.trim();
-    const isPickup = ship === 0;
-
-    const lines = [];
-    lines.push(`Pedido Sushi — ID ${orderId}`);
-    lines.push(`Cliente: ${name}`);
-    lines.push(`Tel: ${phone}`);
-    lines.push(isPickup ? `Entrega: Retiro por el local` : `Entrega: Envío`);
-    if(!isPickup){
-      lines.push(`Dirección: ${address}`);
-      lines.push(`Ciudad: ${city}${zip ? " · CP "+zip : ""}`);
+    function addToCart(id){
+      cart[id] = (cart[id] || 0) + 1;
+      saveCart();
+      renderCart();
     }
-    if(notes) lines.push(`Notas: ${notes}`);
-    lines.push("");
-    lines.push("Items:");
-    for(const [id, qty] of Object.entries(cart)){
-      const p = PRODUCTS.find(x => x.id === id);
-      if(!p) continue;
-      lines.push(`- ${qty} x ${p.name} (${money(p.price)}) = ${money(p.price*qty)}`);
+    function decFromCart(id){
+      if(!cart[id]) return;
+      cart[id] -= 1;
+      if(cart[id] <= 0) delete cart[id];
+      saveCart();
+      renderCart();
     }
-    lines.push("");
-    lines.push(`Subtotal: ${money(sub)}`);
-    lines.push(`Envío: ${money(ship)}`);
-    lines.push(`TOTAL: ${money(tot)}`);
-    return lines.join("\n");
-  }
-
-  function genOrderId(){
-    const t = Date.now().toString(36).toUpperCase();
-    const r = Math.random().toString(36).slice(2,6).toUpperCase();
-    return `${t}-${r}`;
-  }
-
-  btnCheckout.addEventListener("click", () => {
-    const v = validateCheckout();
-    if(!v.ok){
-      alert(v.msg);
-      return;
+    function removeItem(id){
+      delete cart[id];
+      saveCart();
+      renderCart();
     }
-    const id = genOrderId();
-    const summary = buildSummary(id);
+    function clearCart(){
+      cart = {};
+      saveCart();
+      renderCart();
+    }
 
-    orderIdEl.textContent = id;
-    summaryEl.textContent = summary;
-    okBox.style.display = "block";
-    btnWhatsApp.disabled = false;
+    function calcSubtotal(){
+      let s = 0;
+      for(const [id, qty] of Object.entries(cart)){
+        const p = PRODUCTS.find(x => x.id === id);
+        if(p) s += p.price * qty;
+      }
+      return s;
+    }
 
-    okBox.scrollIntoView({behavior:"smooth", block:"start"});
-  });
+    function getCartItemsCount(){
+      return Object.values(cart).reduce((a,b)=>a+b,0);
+    }
 
-  btnWhatsApp.addEventListener("click", () => {
-    const id = orderIdEl.textContent || genOrderId();
-    const summary = buildSummary(id);
-    const text = encodeURIComponent(summary);
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  });
+    function renderCart(){
+      okBox.style.display = "none";
+      btnWhatsApp.disabled = true;
 
-  // Init
-  renderProducts();
-  renderCart();
-</script>
+      const count = getCartItemsCount();
+      itemsPill.textContent = `${count} ítems`;
+
+      if(count === 0){
+        cartHint.textContent = "Agregá productos para continuar";
+        cartListEl.innerHTML = `<div class="muted">Carrito vacío.</div>`;
+      }else{
+        cartHint.textContent = "Revisá cantidades";
+        cartListEl.innerHTML = Object.entries(cart).map(([id, qty]) => {
+          const p = PRODUCTS.find(x => x.id === id);
+          if(!p) return "";
+          const line = p.price * qty;
+          return `
+            <div class="cartItem">
+              <div>
+                <h4>${p.name}</h4>
+                <small>${money(p.price)} · Línea: <strong>${money(line)}</strong></small>
+              </div>
+              <div class="qty">
+                <button class="btn" onclick="decFromCart('${id}')">−</button>
+                <div class="qtyNum">${qty}</div>
+                <button class="btn" onclick="addToCart('${id}')">+</button>
+                <button class="btn btnDanger" onclick="removeItem('${id}')" title="Eliminar">✕</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      const sub = calcSubtotal();
+      const ship = Number(shippingEl.value || 0);
+      const tot = sub + ship;
+
+      subtotalEl.textContent = money(sub);
+      totalEl.textContent = money(tot);
+      totalPill.textContent = money(tot);
+    }
+
+    shippingEl.addEventListener("change", renderCart);
+    btnClear.addEventListener("click", clearCart);
+
+    function validateCheckout(){
+      const count = getCartItemsCount();
+      if(count === 0) return { ok:false, msg:"El carrito está vacío." };
+
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const city = document.getElementById("city").value.trim();
+
+      const isPickup = Number(shippingEl.value) === 0;
+
+      if(!name) return { ok:false, msg:"Falta tu nombre." };
+      if(!phone) return { ok:false, msg:"Falta tu teléfono." };
+      if(!isPickup){
+        if(!address) return { ok:false, msg:"Falta la dirección." };
+        if(!city) return { ok:false, msg:"Falta la ciudad." };
+      }
+      return { ok:true };
+    }
+
+    function buildSummary(orderId){
+      const sub = calcSubtotal();
+      const ship = Number(shippingEl.value || 0);
+      const tot = sub + ship;
+
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const city = document.getElementById("city").value.trim();
+      const zip = document.getElementById("zip").value.trim();
+      const notes = document.getElementById("notes").value.trim();
+      const isPickup = ship === 0;
+
+      const lines = [];
+      lines.push(`Pedido Sushi — ID ${orderId}`);
+      lines.push(`Cliente: ${name}`);
+      lines.push(`Tel: ${phone}`);
+      lines.push(isPickup ? `Entrega: Retiro por el local` : `Entrega: Envío`);
+      if(!isPickup){
+        lines.push(`Dirección: ${address}`);
+        lines.push(`Ciudad: ${city}${zip ? " · CP "+zip : ""}`);
+      }
+      if(notes) lines.push(`Notas: ${notes}`);
+      lines.push("");
+      lines.push("Items:");
+      for(const [id, qty] of Object.entries(cart)){
+        const p = PRODUCTS.find(x => x.id === id);
+        if(!p) continue;
+        lines.push(`- ${qty} x ${p.name} (${money(p.price)}) = ${money(p.price*qty)}`);
+      }
+      lines.push("");
+      lines.push(`Subtotal: ${money(sub)}`);
+      lines.push(`Envío: ${money(ship)}`);
+      lines.push(`TOTAL: ${money(tot)}`);
+      return lines.join("\n");
+    }
+
+    function genOrderId(){
+      const t = Date.now().toString(36).toUpperCase();
+      const r = Math.random().toString(36).slice(2,6).toUpperCase();
+      return `${t}-${r}`;
+    }
+
+    btnCheckout.addEventListener("click", () => {
+      const v = validateCheckout();
+      if(!v.ok){
+        alert(v.msg);
+        return;
+      }
+
+      const id = genOrderId();
+      const summary = buildSummary(id);
+
+      // ✅ 1) Manda automáticamente a Telegram (si configuraste token + chat_id)
+      sendToTelegram(summary);
+
+      // ✅ 2) Muestra resumen en pantalla y habilita WhatsApp (opcional)
+      orderIdEl.textContent = id;
+      summaryEl.textContent = summary;
+      okBox.style.display = "block";
+      btnWhatsApp.disabled = false;
+
+      okBox.scrollIntoView({behavior:"smooth", block:"start"});
+    });
+
+    btnWhatsApp.addEventListener("click", () => {
+      const id = orderIdEl.textContent || genOrderId();
+      const summary = buildSummary(id);
+      const text = encodeURIComponent(summary);
+      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+
+    // Init
+    renderProducts();
+    renderCart();
+  </script>
 </body>
 </html>
