@@ -7,15 +7,16 @@
   <style>
     :root{
       --bg:#0b0d10; --card:#12161b; --muted:#9aa6b2; --text:#e9eef3;
-      --brand:#d14b4b;
-      --brand2:#b51f2b;
+      --brand:#d14b4b; --brand2:#b51f2b;
       --danger:#ff5c5c; --line:#1f2630;
+      --wa:#25D366;
     }
     *{box-sizing:border-box}
     body{
       margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background:linear-gradient(180deg,#0b0d10,#0b0d10 40%,#07080a);
       color:var(--text);
+      min-height:100vh;
     }
     header{
       position:sticky; top:0; z-index:10;
@@ -31,19 +32,19 @@
       box-shadow: 0 10px 30px rgba(209,75,75,.22);
     }
     .brand h1{font-size:16px;margin:0}
-    .brand small{color:var(--muted)}
+    .pill{
+      background:#0f141a;border:1px solid var(--line);
+      padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px
+    }
     .cartBadge{
       display:flex;gap:10px;align-items:center;
       background:var(--card); border:1px solid var(--line);
       padding:10px 12px;border-radius:14px;
     }
-    .pill{
-      background:#0f141a;border:1px solid var(--line);
-      padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px
-    }
+
     .btn{
       border:1px solid var(--line);
-      background: #0f141a;
+      background:#0f141a;
       color:var(--text);
       padding:10px 12px;
       border-radius:12px;
@@ -60,6 +61,7 @@
       font-weight:800;
     }
     .btnDanger{border-color:#3a1e1e;color:#ffd0d0;background:#140c0c}
+
     main{padding:18px 0 40px}
     .grid{
       display:grid;
@@ -88,14 +90,12 @@
     @media (min-width: 720px){
       .products{grid-template-columns: repeat(2, minmax(0,1fr));}
     }
-
     .product{
       border:1px solid var(--line);
       border-radius:16px;
       overflow:hidden;
       background: linear-gradient(180deg, rgba(15,20,26,.9), rgba(15,20,26,.55));
     }
-
     .mediaStrip{
       display:flex;
       overflow-x:auto;
@@ -115,7 +115,6 @@
       object-fit:cover;
       display:block;
     }
-
     .productBody{padding:12px}
     .product h3{margin:0 0 4px 0;font-size:14px}
     .product p{margin:0 0 10px 0;color:var(--muted);font-size:12px;line-height:1.35}
@@ -139,9 +138,7 @@
       min-width:170px;
     }
     .qty .btn{padding:7px 10px;border-radius:10px}
-    .qtyNum{
-      min-width:26px;text-align:center;font-weight:900
-    }
+    .qtyNum{min-width:26px;text-align:center;font-weight:900}
     .row{display:flex;justify-content:space-between;gap:12px;margin:10px 0;color:var(--muted)}
     .row strong{color:var(--text)}
     .divider{height:1px;background:var(--line);margin:12px 0}
@@ -166,35 +163,113 @@
     textarea{min-height:78px;resize:vertical}
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     .notice{font-size:12px;color:var(--muted);line-height:1.4}
-    .okBox{
-      display:none;
-      border:1px solid rgba(209,75,75,.35);
-      background: rgba(209,75,75,.08);
-      padding:12px;border-radius:16px;margin-top:12px
-    }
-    .okBox h3{margin:0 0 6px 0;font-size:14px}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
 
-    .brandText {display:flex;flex-direction:column;gap:2px;}
-    .brandMark {margin-top:4px;}
-    .brandImg {
-      height: 26px; width: auto; display:block; border-radius: 8px;
+    /* LOGO HEADER */
+    .brandText{display:flex;flex-direction:column;gap:2px;}
+    .brandMark{margin-top:4px;}
+    .brandImg{
+      height:26px;width:auto;display:block;border-radius:8px;
       filter: drop-shadow(0 10px 22px rgba(0,0,0,.35));
     }
-    @media (max-width: 380px) { .brandImg { height: 22px; } }
-    .brandFallback { color: var(--muted); font-size: 12px; }
+    @media (max-width:380px){ .brandImg{height:22px;} }
+    .brandFallback{color:var(--muted);font-size:12px;}
+
+    /* ✅ Pantalla enviada */
+    .screen{display:none;}
+    .screen.active{display:block;}
+    .sentWrap{
+      max-width:720px; margin:26px auto 0; padding:16px;
+      display:flex; flex-direction:column; gap:12px;
+    }
+    .sentCard{
+      background:rgba(18,22,27,.95);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      text-align:center;
+    }
+    .sentTitle{
+      font-size:18px; margin:0 0 10px 0; font-weight:900;
+      letter-spacing:.2px;
+    }
+    .sentMsg{color:var(--muted); margin:0; line-height:1.45; font-size:13px}
+    .sentHint{
+      margin-top:12px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(209,75,75,.35);
+      background: rgba(209,75,75,.08);
+      color: #ffd7d7;
+      font-size:12px;
+      text-align:left;
+      white-space:pre-wrap;
+    }
+    .centerActions{display:flex; justify-content:center; gap:10px; margin-top:12px; flex-wrap:wrap;}
+
+    /* ✅ WhatsApp Floating Button */
+    .waFloat{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      width:56px;
+      height:56px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      background: radial-gradient(circle at 30% 30%, #52f08a, var(--wa) 60%, #0f6a33);
+      box-shadow: 0 18px 45px rgba(0,0,0,.5);
+      z-index:999;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .waFloat:hover{transform: translateY(-2px); filter: brightness(1.02);}
+    .waFloat:active{transform: translateY(0px); filter: brightness(.98);}
+    .waIcon{
+      width:30px;
+      height:30px;
+      display:block;
+    }
+    .waLabel{
+      position:fixed;
+      right:84px;
+      bottom:26px;
+      background:rgba(18,22,27,.92);
+      border:1px solid var(--line);
+      color:var(--text);
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:12px;
+      box-shadow: 0 14px 35px rgba(0,0,0,.45);
+      z-index:998;
+      opacity:0;
+      transform: translateY(6px);
+      pointer-events:none;
+      transition: .15s ease;
+    }
+    .waFloat:hover + .waLabel{opacity:1; transform: translateY(0px);}
+
+    /* Accesibilidad */
+    .srOnly{
+      position:absolute!important;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);
+      white-space:nowrap;border:0;
+    }
   </style>
 </head>
 <body>
+
   <header>
     <div class="wrap">
       <div class="topbar">
         <div class="brand">
           <div class="logo" aria-hidden="true"></div>
-
           <div class="brandText">
             <h1>Minato Madero</h1>
-
             <div class="brandMark">
               <img
                 src="assets/brand-logo.png"
@@ -203,9 +278,7 @@
                 loading="lazy"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
               />
-              <span class="brandFallback" style="display:none;">
-                Pedidos · Sushi
-              </span>
+              <span class="brandFallback" style="display:none;">Pedidos · Sushi</span>
             </div>
           </div>
         </div>
@@ -219,7 +292,8 @@
     </div>
   </header>
 
-  <main>
+  <!-- ✅ SCREEN: PRINCIPAL -->
+  <main class="screen active" id="screenMain">
     <div class="wrap grid">
       <section class="card">
         <div class="sectionTitle">
@@ -231,7 +305,7 @@
 
         <div class="divider"></div>
         <div class="notice">
-          Tip: esto está pensado para arrancar rápido sin backend. Cuando quieras, lo conectamos a un backend (FastAPI / Firebase) para registrar pedidos, stock y pagos.
+          Tip: esto está pensado para arrancar rápido sin backend. Al finalizar, el pedido se envía a Telegram del local y luego te contactamos por WhatsApp.
         </div>
       </section>
 
@@ -293,95 +367,145 @@
         </div>
 
         <div class="actions">
-          <button class="btn btnPrimary" id="btnCheckout">Finalizar compra</button>
-          <button class="btn" id="btnWhatsApp" disabled>Enviar por WhatsApp</button>
-        </div>
-
-        <div class="okBox" id="okBox">
-          <h3>Pedido listo ✅</h3>
-          <div class="notice">
-            ID: <span class="mono" id="orderId">—</span><br/>
-            Copiá el resumen o envialo por WhatsApp.
-          </div>
-          <div class="divider"></div>
-          <pre class="mono" id="summary" style="white-space:pre-wrap;margin:0;color:#dfe7ee;font-size:12px"></pre>
+          <button class="btn btnPrimary" id="btnCheckout">Finalizar pedido</button>
         </div>
 
         <div class="divider"></div>
         <div class="notice">
-          *Precios en ARS. Esto no procesa pago; solo arma el pedido. Si querés pago online (Mercado Pago / transferencia / tarjeta), lo sumamos después.
+          *Precios en ARS. Esto no procesa pago online: solo arma el pedido. Te contactaremos por WhatsApp para confirmar y compartir el estado.
         </div>
       </aside>
     </div>
   </main>
 
+  <!-- ✅ SCREEN: ENVIADO -->
+  <main class="screen" id="screenSent">
+    <div class="sentWrap">
+      <div class="sentCard">
+        <p class="sentTitle">PEDIDO ENVIADO ✅</p>
+        <p class="sentMsg">
+          NOS CONTACTAREMOS POR WHATSAPP PARA QUE PUEDA ACOMPAÑAR EL ESTADO DEL MISMO
+        </p>
+
+        <div class="sentHint" id="sentDetails" aria-live="polite"></div>
+
+        <div class="centerActions">
+          <button class="btn btnPrimary" id="btnNewOrder">Hacer otro pedido</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ✅ WhatsApp Floating Button (solo abre WhatsApp) -->
+  <button class="waFloat" id="waFloat" aria-label="Abrir WhatsApp">
+    <!-- Icono WhatsApp (SVG) -->
+    <svg class="waIcon" viewBox="0 0 32 32" aria-hidden="true">
+      <path fill="#0b0d10" d="M19.11 17.36c-.27-.14-1.59-.78-1.84-.87-.25-.09-.43-.14-.61.14-.18.27-.7.87-.86 1.05-.16.18-.32.2-.59.07-.27-.14-1.15-.42-2.19-1.33-.81-.72-1.36-1.6-1.52-1.87-.16-.27-.02-.41.12-.55.12-.12.27-.32.41-.48.14-.16.18-.27.27-.46.09-.18.05-.34-.02-.48-.07-.14-.61-1.48-.84-2.03-.22-.53-.45-.46-.61-.46h-.52c-.18 0-.48.07-.73.34-.25.27-.95.93-.95 2.27 0 1.34.97 2.64 1.11 2.82.14.18 1.91 2.92 4.63 4.09.65.28 1.16.45 1.56.57.66.21 1.26.18 1.73.11.53-.08 1.59-.65 1.82-1.27.23-.62.23-1.15.16-1.27-.07-.11-.25-.18-.52-.32z"/>
+      <path fill="#0b0d10" d="M16 3C9.38 3 4 8.38 4 15c0 2.31.66 4.47 1.8 6.31L4 29l7.89-1.77A11.93 11.93 0 0 0 16 27c6.62 0 12-5.38 12-12S22.62 3 16 3zm0 21.7c-1.3 0-2.58-.34-3.71-.99l-.53-.31-4.68 1.05 1.03-4.55-.35-.56A9.68 9.68 0 0 1 6.3 15C6.3 9.65 10.65 5.3 16 5.3S25.7 9.65 25.7 15 21.35 24.7 16 24.7z"/>
+    </svg>
+    <span class="srOnly">WhatsApp</span>
+  </button>
+  <div class="waLabel">WhatsApp</div>
+
   <script>
-    // ==== Config rápida ====
-    const WHATSAPP_NUMBER = "5491112345678"; // <-- CAMBIÁ ESTO (sin +, sin espacios). Ej: 54911xxxxxxx
+    // =========================
+    // CONFIG
+    // =========================
 
-    // ✅ Telegram (SIN backend)
-    // 1) Creá bot en @BotFather -> te da BOT_TOKEN
-    // 2) Mandale "hola" al bot
-    // 3) Abrí: https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
-    // 4) Copiá el chat.id (persona o grupo) y pegalo abajo
-    const TELEGRAM_BOT_TOKEN = "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0"; // <-- PEGÁ ACÁ TU TOKEN REAL
-    const TELEGRAM_CHAT_ID   = "6137131451"; // <-- PEGÁ ACÁ TU CHAT_ID (persona o grupo)
+    // ✅ WhatsApp: SOLO para abrir chat (botón flotante)
+    // - Si querés que abra directo tu chat, poné tu número real:
+    //   Ej: 54911xxxxxxxx (sin +, sin espacios)
+    const WHATSAPP_NUMBER = "5491157990741"; // <-- CAMBIÁ ESTO
 
-    // ✅ Poné tus imágenes en /assets y actualizá estas rutas:
+    // ✅ Telegram: envío automático al finalizar
+    const TELEGRAM_BOT_TOKEN = "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0"; // <-- PEGÁ TU TOKEN REAL
+    const TELEGRAM_CHAT_ID   = "6137131451"; // <-- PEGÁ TU CHAT_ID REAL (persona o grupo)
+
+    // Productos
     const PRODUCTS = [
-      {
-        id:"box12",
-        name:"Caja 12 (clásica)",
-        desc:"12 piezas surtidas (maki + nigiri).",
-        price: 9900,
-        images: ["assets/box-12-1.jpeg","assets/box-12-2.jpeg"]
-      },
-      {
-        id:"box18",
-        name:"Caja 18 (premium)",
-        desc:"18 piezas surtidas + 1 salsa especial.",
-        price: 14900,
-        images: ["assets/box-18-1.jpeg","assets/box-18-2.jpeg"]
-      },
-      {
-        id:"box24",
-        name:"Caja 24 (familia)",
-        desc:"24 piezas surtidas para compartir.",
-        price: 18900,
-        images: ["assets/box-24-1.jpeg","assets/box-24-2.jpeg"]
-      },
-      {
-        id:"box30",
-        name:"Caja 30 (fiesta)",
-        desc:"30 piezas + 2 salsas + jengibre.",
-        price: 23900,
-        images: ["assets/box-30-1.jpeg","assets/box-30-2.jpeg"]
-      }
+      { id:"box12", name:"Caja 12 (clásica)", desc:"12 piezas surtidas (maki + nigiri).", price: 9900, images: ["assets/box-12-1.jpeg","assets/box-12-2.jpeg"] },
+      { id:"box18", name:"Caja 18 (premium)", desc:"18 piezas surtidas + 1 salsa especial.", price: 14900, images: ["assets/box-18-1.jpeg","assets/box-18-2.jpeg"] },
+      { id:"box24", name:"Caja 24 (familia)", desc:"24 piezas surtidas para compartir.", price: 18900, images: ["assets/box-24-1.jpeg","assets/box-24-2.jpeg"] },
+      { id:"box30", name:"Caja 30 (fiesta)", desc:"30 piezas + 2 salsas + jengibre.", price: 23900, images: ["assets/box-30-1.jpeg","assets/box-30-2.jpeg"] }
     ];
 
+    // =========================
+    // HELPERS
+    // =========================
     const money = (n) => n.toLocaleString("es-AR", { style:"currency", currency:"ARS", maximumFractionDigits:0 });
 
-    // ==== Estado ====
-    const LS_KEY = "sushi_cart_v1";
-    let cart = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    function genOrderId(){
+      const t = Date.now().toString(36).toUpperCase();
+      const r = Math.random().toString(36).slice(2,6).toUpperCase();
+      return `${t}-${r}`;
+    }
 
-    // ==== Telegram sender ====
+    function showScreen(which){
+      document.getElementById("screenMain").classList.remove("active");
+      document.getElementById("screenSent").classList.remove("active");
+      document.getElementById(which).classList.add("active");
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+
     function sendToTelegram(text){
-      // Si no configuraste aún, no rompe nada:
-      if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === "BABITABABABA") return;
-      if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "BABITABABABA") return;
+      // Evita errores si todavía no pegaste token/chat_id
+      if(!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN === "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0") return Promise.resolve({skipped:true});
+      if(!TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID === "6137131451") return Promise.resolve({skipped:true});
 
-      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      return fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
           text: text
         })
-      }).catch(err => console.error("Telegram error:", err));
+      });
     }
 
-    // ==== Render productos ====
+    // =========================
+    // STATE (Carrito)
+    // =========================
+    const LS_KEY = "sushi_cart_v1";
+    let cart = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+
+    function saveCart(){ localStorage.setItem(LS_KEY, JSON.stringify(cart)); }
+    function clearCart(){
+      cart = {};
+      saveCart();
+      renderCart();
+    }
+    function addToCart(id){
+      cart[id] = (cart[id] || 0) + 1;
+      saveCart();
+      renderCart();
+    }
+    function decFromCart(id){
+      if(!cart[id]) return;
+      cart[id] -= 1;
+      if(cart[id] <= 0) delete cart[id];
+      saveCart();
+      renderCart();
+    }
+    function removeItem(id){
+      delete cart[id];
+      saveCart();
+      renderCart();
+    }
+    function calcSubtotal(){
+      let s = 0;
+      for(const [id, qty] of Object.entries(cart)){
+        const p = PRODUCTS.find(x => x.id === id);
+        if(p) s += p.price * qty;
+      }
+      return s;
+    }
+    function getCartItemsCount(){
+      return Object.values(cart).reduce((a,b)=>a+b,0);
+    }
+
+    // =========================
+    // RENDER Productos
+    // =========================
     const productsEl = document.getElementById("products");
 
     function renderProducts(){
@@ -411,7 +535,9 @@
       }).join("");
     }
 
-    // ==== Carrito ====
+    // =========================
+    // RENDER Carrito
+    // =========================
     const cartListEl = document.getElementById("cartList");
     const itemsPill = document.getElementById("itemsPill");
     const totalPill = document.getElementById("totalPill");
@@ -421,55 +547,8 @@
     const shippingEl = document.getElementById("shipping");
     const btnClear = document.getElementById("btnClear");
     const btnCheckout = document.getElementById("btnCheckout");
-    const btnWhatsApp = document.getElementById("btnWhatsApp");
-    const okBox = document.getElementById("okBox");
-    const orderIdEl = document.getElementById("orderId");
-    const summaryEl = document.getElementById("summary");
-
-    function saveCart(){
-      localStorage.setItem(LS_KEY, JSON.stringify(cart));
-    }
-
-    function addToCart(id){
-      cart[id] = (cart[id] || 0) + 1;
-      saveCart();
-      renderCart();
-    }
-    function decFromCart(id){
-      if(!cart[id]) return;
-      cart[id] -= 1;
-      if(cart[id] <= 0) delete cart[id];
-      saveCart();
-      renderCart();
-    }
-    function removeItem(id){
-      delete cart[id];
-      saveCart();
-      renderCart();
-    }
-    function clearCart(){
-      cart = {};
-      saveCart();
-      renderCart();
-    }
-
-    function calcSubtotal(){
-      let s = 0;
-      for(const [id, qty] of Object.entries(cart)){
-        const p = PRODUCTS.find(x => x.id === id);
-        if(p) s += p.price * qty;
-      }
-      return s;
-    }
-
-    function getCartItemsCount(){
-      return Object.values(cart).reduce((a,b)=>a+b,0);
-    }
 
     function renderCart(){
-      okBox.style.display = "none";
-      btnWhatsApp.disabled = true;
-
       const count = getCartItemsCount();
       itemsPill.textContent = `${count} ítems`;
 
@@ -511,6 +590,9 @@
     shippingEl.addEventListener("change", renderCart);
     btnClear.addEventListener("click", clearCart);
 
+    // =========================
+    // CHECKOUT
+    // =========================
     function validateCheckout(){
       const count = getCartItemsCount();
       if(count === 0) return { ok:false, msg:"El carrito está vacío." };
@@ -545,17 +627,17 @@
       const isPickup = ship === 0;
 
       const lines = [];
-      lines.push(`Pedido Sushi — ID ${orderId}`);
-      lines.push(`Cliente: ${name}`);
-      lines.push(`Tel: ${phone}`);
-      lines.push(isPickup ? `Entrega: Retiro por el local` : `Entrega: Envío`);
+      lines.push(`🍣 Pedido Sushi — ID ${orderId}`);
+      lines.push(`👤 Cliente: ${name}`);
+      lines.push(`📞 Tel: ${phone}`);
+      lines.push(isPickup ? `📦 Entrega: Retiro por el local` : `🛵 Entrega: Envío`);
       if(!isPickup){
-        lines.push(`Dirección: ${address}`);
-        lines.push(`Ciudad: ${city}${zip ? " · CP "+zip : ""}`);
+        lines.push(`📍 Dirección: ${address}`);
+        lines.push(`🏙️ Ciudad: ${city}${zip ? " · CP "+zip : ""}`);
       }
-      if(notes) lines.push(`Notas: ${notes}`);
+      if(notes) lines.push(`📝 Notas: ${notes}`);
       lines.push("");
-      lines.push("Items:");
+      lines.push("🧾 Items:");
       for(const [id, qty] of Object.entries(cart)){
         const p = PRODUCTS.find(x => x.id === id);
         if(!p) continue;
@@ -568,39 +650,54 @@
       return lines.join("\n");
     }
 
-    function genOrderId(){
-      const t = Date.now().toString(36).toUpperCase();
-      const r = Math.random().toString(36).slice(2,6).toUpperCase();
-      return `${t}-${r}`;
-    }
-
-    btnCheckout.addEventListener("click", () => {
+    // Cuando finaliza: manda a Telegram y muestra pantalla enviada
+    const sentDetailsEl = document.getElementById("sentDetails");
+    btnCheckout.addEventListener("click", async () => {
       const v = validateCheckout();
-      if(!v.ok){
-        alert(v.msg);
-        return;
+      if(!v.ok){ alert(v.msg); return; }
+
+      const orderId = genOrderId();
+      const summary = buildSummary(orderId);
+
+      // Envío a Telegram (si token/chat_id están configurados)
+      try{
+        await sendToTelegram(summary);
+      }catch(e){
+        // Si falla, igual mostramos enviado (para no frenar al cliente)
+        console.error("Telegram send failed:", e);
       }
 
-      const id = genOrderId();
-      const summary = buildSummary(id);
+      // Mostramos pantalla "enviado" y limpiamos carro
+      sentDetailsEl.textContent = summary;
+      showScreen("screenSent");
 
-      // ✅ 1) Manda automáticamente a Telegram (si configuraste token + chat_id)
-      sendToTelegram(summary);
-
-      // ✅ 2) Muestra resumen en pantalla y habilita WhatsApp (opcional)
-      orderIdEl.textContent = id;
-      summaryEl.textContent = summary;
-      okBox.style.display = "block";
-      btnWhatsApp.disabled = false;
-
-      okBox.scrollIntoView({behavior:"smooth", block:"start"});
+      clearCart(); // limpia y actualiza UI del main
     });
 
-    btnWhatsApp.addEventListener("click", () => {
-      const id = orderIdEl.textContent || genOrderId();
-      const summary = buildSummary(id);
-      const text = encodeURIComponent(summary);
-      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+    // =========================
+    // NUEVO PEDIDO
+    // =========================
+    document.getElementById("btnNewOrder").addEventListener("click", () => {
+      // Limpia campos
+      document.getElementById("name").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("address").value = "";
+      document.getElementById("city").value = "";
+      document.getElementById("zip").value = "";
+      document.getElementById("notes").value = "";
+      document.getElementById("shipping").value = "0";
+
+      // Vuelve a la pantalla principal
+      showScreen("screenMain");
+      renderCart();
+    });
+
+    // =========================
+    // WhatsApp Floating Button
+    // =========================
+    document.getElementById("waFloat").addEventListener("click", () => {
+      // Abre WhatsApp (chat con el local). Si preferís solo "abrir WhatsApp" sin número, avisame.
+      const url = `https://wa.me/${WHATSAPP_NUMBER}`;
       window.open(url, "_blank", "noopener,noreferrer");
     });
 
