@@ -403,325 +403,537 @@
   <div class="waLabel">WhatsApp</div>
 
   <script>
-    // =========================
-    // CONFIG
-    // =========================
-    const WHATSAPP_NUMBER = "5491157990741"; // <- tu WhatsApp (sin +, sin espacios)
+  // =========================
+  // CONFIG
+  // =========================
+  const WHATSAPP_NUMBER = "5491157990741";
 
-    // ⚠️ Ojo: esto expone el token en el HTML (solo para arrancar rápido).
-    const TELEGRAM_BOT_TOKEN = "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0";
-    const TELEGRAM_CHAT_ID   = "6137131451";
+  // ⚠️ Esto expone el token en el HTML (solo para arrancar).
+  const TELEGRAM_BOT_TOKEN = "8516008342:AAGJme3y2IQKkwOxcmOjnITSQZMtgBqtgQ0";
+  const TELEGRAM_CHAT_ID   = "6137131451";
 
-    const PRODUCTS = [
-      { id:"box12", name:"Caja 12 (clásica)", desc:"12 piezas surtidas (maki + nigiri).", price: 9900, images: ["assets/box-12-1.jpeg","assets/box-12-2.jpeg"] },
-      { id:"box18", name:"Caja 18 (premium)", desc:"18 piezas surtidas + 1 salsa especial.", price: 14900, images: ["assets/box-18-1.jpeg","assets/box-18-2.jpeg"] },
-      { id:"box24", name:"Caja 24 (familia)", desc:"24 piezas surtidas para compartir.", price: 18900, images: ["assets/box-24-1.jpeg","assets/box-24-2.jpeg"] },
-      { id:"box30", name:"Caja 30 (fiesta)", desc:"30 piezas + 2 salsas + jengibre.", price: 23900, images: ["assets/box-30-1.jpeg","assets/box-30-2.jpeg"] }
-    ];
+  // =========================
+  // GOOGLE SHEETS (CSV publicado)
+  // =========================
+  const SHEET_CSV_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vREp3ojnvyGlaN71iuVLMPGlAJRywiSw6MA5soNx87-Ab56TjR6L--gqkQ9PfKL5UTDz9MxCbeIC8pa/pub?gid=0&single=true&output=csv";
 
-    // =========================
-    // HELPERS
-    // =========================
-    const money = (n) => n.toLocaleString("es-AR", { style:"currency", currency:"ARS", maximumFractionDigits:0 });
+  // =========================
+  // UI: Tabs estilo PedidosYa
+  // =========================
+  // Insertamos una barra de categorías debajo del header (sin tocar tu HTML)
+  const headerWrap = document.querySelector("header .wrap");
+  const tabsBar = document.createElement("div");
+  tabsBar.style.marginTop = "10px";
+  tabsBar.innerHTML = `
+    <div class="catBar" id="catBar" aria-label="Categorías">
+      <button class="catBtn active" data-cat="PIEZAS">Piezas</button>
+      <button class="catBtn" data-cat="CAJAS">Cajas</button>
+      <button class="catBtn" data-cat="BEBIDAS_EXTRAS">Bebidas y Extras</button>
+    </div>
+  `;
+  headerWrap.appendChild(tabsBar);
 
-    function genOrderId(){
-      const t = Date.now().toString(36).toUpperCase();
-      const r = Math.random().toString(36).slice(2,6).toUpperCase();
-      return `${t}-${r}`;
+  // CSS mínimo para la barra (inyectado)
+  const style = document.createElement("style");
+  style.textContent = `
+    .catBar{
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:10px 0 2px;
+      scrollbar-width: thin;
     }
-
-    function showScreen(which){
-      document.getElementById("screenMain").classList.remove("active");
-      document.getElementById("screenSent").classList.remove("active");
-      document.getElementById(which).classList.add("active");
-      window.scrollTo({top:0, behavior:"smooth"});
+    .catBar::-webkit-scrollbar{height:10px}
+    .catBar::-webkit-scrollbar-thumb{background:#1d2631;border-radius:999px}
+    .catBtn{
+      flex:0 0 auto;
+      border:1px solid var(--line);
+      background:#0f141a;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:13px;
+      opacity:.9;
+      transition:.15s transform ease, .15s opacity ease, .15s border ease;
+      user-select:none;
+      white-space:nowrap;
     }
+    .catBtn:hover{transform: translateY(-1px); border-color:#2b3645}
+    .catBtn.active{
+      background: linear-gradient(180deg, #ff6b6b, var(--brand));
+      border-color: transparent;
+      color:#2a070a;
+      font-weight:900;
+      opacity:1;
+    }
+    .catHint{
+      color:var(--muted);
+      font-size:12px;
+      margin-left:2px;
+      margin-top:4px;
+    }
+  `;
+  document.head.appendChild(style);
 
-    // =========================
-    // TELEGRAM (con validación + split por largo)
-    // =========================
-    async function telegramSendOne(part){
-      const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: part })
-      });
+  // =========================
+  // HELPERS
+  // =========================
+  const money = (n) => Number(n || 0).toLocaleString("es-AR", {
+    style:"currency", currency:"ARS", maximumFractionDigits:0
+  });
 
-      const data = await res.json().catch(() => null);
-      console.log("Telegram response:", res.status, data);
+  function genOrderId(){
+    const t = Date.now().toString(36).toUpperCase();
+    const r = Math.random().toString(36).slice(2,6).toUpperCase();
+    return `${t}-${r}`;
+  }
 
-      if(!res.ok || !data || !data.ok){
-        throw new Error("Telegram error: " + JSON.stringify(data || { http_status: res.status }));
+  function showScreen(which){
+    document.getElementById("screenMain").classList.remove("active");
+    document.getElementById("screenSent").classList.remove("active");
+    document.getElementById(which).classList.add("active");
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  // CSV parser simple que soporta comillas
+  function parseCSV(text){
+    const rows = [];
+    let row = [], cur = "", inQuotes = false;
+
+    for(let i=0;i<text.length;i++){
+      const c = text[i];
+      const n = text[i+1];
+
+      if(c === '"' ){
+        if(inQuotes && n === '"'){ cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+        continue;
       }
-      return data;
-    }
 
-    async function sendToTelegram(text){
-      if(!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID){
-        throw new Error("Falta TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID");
+      if(!inQuotes && (c === ",")){
+        row.push(cur); cur = "";
+        continue;
       }
 
-      // Telegram sendMessage límite ~4096 chars. Cortamos un poco antes.
-      const MAX = 3900;
-      const parts = [];
-      for(let i=0; i<text.length; i += MAX){
-        parts.push(text.slice(i, i + MAX));
+      if(!inQuotes && (c === "\n" || c === "\r")){
+        if(c === "\r" && n === "\n") i++;
+        row.push(cur); cur = "";
+        // ignorar líneas vacías
+        const nonEmpty = row.some(x => (x || "").trim() !== "");
+        if(nonEmpty) rows.push(row);
+        row = [];
+        continue;
       }
 
-      // Enviamos parte por parte (en orden)
-      for(let idx=0; idx<parts.length; idx++){
-        const prefix = (parts.length > 1) ? `(${idx+1}/${parts.length}) ` : "";
-        await telegramSendOne(prefix + parts[idx]);
+      cur += c;
+    }
+    row.push(cur);
+    if(row.some(x => (x || "").trim() !== "")) rows.push(row);
+    return rows;
+  }
+
+  // =========================
+  // DATA: Productos (desde Sheet)
+  // =========================
+  let PRODUCTS = [];
+  let currentCat = "PIEZAS";
+
+  async function loadProductsFromSheet(){
+  const res = await fetch(SHEET_CSV_URL + `&t=${Date.now()}`, { cache:"no-store" });
+  if(!res.ok) throw new Error("No se pudo leer la Google Sheet (CSV).");
+  const csv = await res.text();
+
+  const rows = parseCSV(csv);
+  const headers = rows.shift().map(h => (h||"").trim().toLowerCase());
+
+  const idx = (name) => headers.indexOf(name);
+
+  const out = [];
+  for(const r of rows){
+    const activo = (r[idx("activo")] || "1").trim();
+    if(activo === "0") continue;
+
+    const p = {
+      id: (r[idx("id")] || "").trim(),
+      category: (r[idx("categoria")] || "").trim().toUpperCase(),
+      name: (r[idx("nombre")] || "").trim(),
+      desc: (r[idx("descripcion")] || "").trim(),
+      price: Number((r[idx("precio")] || "0").toString().replace(/[^\d]/g,"")) || 0,
+      unit: (r[idx("unidad")] || "").trim() || "—",
+      images: []
+    };
+
+    const img1 = (r[idx("imagen1")] || "").trim();
+    const img2 = (r[idx("imagen2")] || "").trim();
+    if(img1) p.images.push(img1);
+    if(img2) p.images.push(img2);
+
+    if(!p.id || !p.name || !p.category) continue;
+    out.push(p);
+  }
+
+
+    // limpiar carrito de items que ya no existen
+    cleanupCartAgainstProducts();
+    renderProducts();
+    renderCart();
+  }
+
+  // =========================
+  // STATE (Carrito)
+  // =========================
+  const LS_KEY = "sushi_cart_v1";
+  let cart = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+
+  function saveCart(){ localStorage.setItem(LS_KEY, JSON.stringify(cart)); }
+
+  function cleanupCartAgainstProducts(){
+    const ids = new Set(PRODUCTS.map(p => p.id));
+    let changed = false;
+    for(const id of Object.keys(cart)){
+      if(!ids.has(id)){
+        delete cart[id];
+        changed = true;
       }
     }
+    if(changed) saveCart();
+  }
 
-    // =========================
-    // STATE (Carrito)
-    // =========================
-    const LS_KEY = "sushi_cart_v1";
-    let cart = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+  function clearCart(){
+    cart = {};
+    saveCart();
+    renderCart();
+  }
 
-    function saveCart(){ localStorage.setItem(LS_KEY, JSON.stringify(cart)); }
-    function clearCart(){
-      cart = {};
-      saveCart();
-      renderCart();
+  function addToCart(id){
+    cart[id] = (cart[id] || 0) + 1;
+    saveCart();
+    renderCart();
+  }
+
+  function decFromCart(id){
+    if(!cart[id]) return;
+    cart[id] -= 1;
+    if(cart[id] <= 0) delete cart[id];
+    saveCart();
+    renderCart();
+  }
+
+  function removeItem(id){
+    delete cart[id];
+    saveCart();
+    renderCart();
+  }
+
+  function calcSubtotal(){
+    let s = 0;
+    for(const [id, qty] of Object.entries(cart)){
+      const p = PRODUCTS.find(x => x.id === id);
+      if(p) s += p.price * qty;
     }
-    function addToCart(id){
-      cart[id] = (cart[id] || 0) + 1;
-      saveCart();
-      renderCart();
-    }
-    function decFromCart(id){
-      if(!cart[id]) return;
-      cart[id] -= 1;
-      if(cart[id] <= 0) delete cart[id];
-      saveCart();
-      renderCart();
-    }
-    function removeItem(id){
-      delete cart[id];
-      saveCart();
-      renderCart();
-    }
-    function calcSubtotal(){
-      let s = 0;
-      for(const [id, qty] of Object.entries(cart)){
-        const p = PRODUCTS.find(x => x.id === id);
-        if(p) s += p.price * qty;
-      }
-      return s;
-    }
-    function getCartItemsCount(){
-      return Object.values(cart).reduce((a,b)=>a+b,0);
+    return s;
+  }
+
+  function getCartItemsCount(){
+    return Object.values(cart).reduce((a,b)=>a+b,0);
+  }
+
+  // =========================
+  // RENDER Productos (filtrados por categoría)
+  // =========================
+  const productsEl = document.getElementById("products");
+
+  function renderProducts(){
+    const list = PRODUCTS.filter(p => p.category === currentCat);
+
+    // Cambiamos el subtítulo según categoría
+    const sectionSpan = document.querySelector(".sectionTitle span");
+    if(sectionSpan){
+      sectionSpan.textContent =
+        currentCat === "PIEZAS" ? "Elegí piezas (4 unidades)" :
+        currentCat === "CAJAS" ? "Elegí tus cajas" :
+        "Bebidas y extras";
     }
 
-    // =========================
-    // RENDER Productos
-    // =========================
-    const productsEl = document.getElementById("products");
+    if(list.length === 0){
+      productsEl.innerHTML = `<div class="muted">No hay productos en esta categoría.</div>`;
+      return;
+    }
 
-    function renderProducts(){
-      productsEl.innerHTML = PRODUCTS.map(p => {
-        const imgs = (p.images && p.images.length)
-          ? p.images.map((src, i) => `<img class="media" loading="lazy" src="${src}" alt="${p.name} foto ${i+1}">`).join("")
-          : `<img class="media" loading="lazy" src="assets/placeholder.jpeg" alt="${p.name}">`;
+    productsEl.innerHTML = list.map(p => {
+      const imgs = (p.images && p.images.length)
+        ? p.images.map((src, i) =>
+            `<img class="media" loading="lazy" src="${src}" alt="${p.name} foto ${i+1}">`
+          ).join("")
+        : `<img class="media" loading="lazy" src="assets/placeholder.jpeg" alt="${p.name}">`;
 
-        return `
-          <div class="product">
-            <div class="mediaStrip" aria-label="Imágenes de ${p.name}">
-              ${imgs}
-            </div>
-            <div class="productBody">
-              <h3>${p.name}</h3>
-              <p>${p.desc}</p>
-              <div class="priceRow">
-                <div>
-                  <div class="price">${money(p.price)}</div>
-                  <div class="muted" style="font-size:12px">por caja</div>
-                </div>
-                <button class="btn btnPrimary" onclick="addToCart('${p.id}')">Agregar</button>
+      return `
+        <div class="product">
+          <div class="mediaStrip" aria-label="Imágenes de ${p.name}">
+            ${imgs}
+          </div>
+          <div class="productBody">
+            <h3>${p.name}</h3>
+            <p>${p.desc}</p>
+            <div class="priceRow">
+              <div>
+                <div class="price">${money(p.price)}</div>
+                <div class="muted" style="font-size:12px">${p.unit}</div>
               </div>
+              <button class="btn btnPrimary" onclick="addToCart('${p.id}')">Agregar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // =========================
+  // RENDER Carrito
+  // =========================
+  const cartListEl = document.getElementById("cartList");
+  const itemsPill = document.getElementById("itemsPill");
+  const totalPill = document.getElementById("totalPill");
+  const subtotalEl = document.getElementById("subtotal");
+  const totalEl = document.getElementById("total");
+  const cartHint = document.getElementById("cartHint");
+  const shippingEl = document.getElementById("shipping");
+  const btnClear = document.getElementById("btnClear");
+  const btnCheckout = document.getElementById("btnCheckout");
+
+  function renderCart(){
+    const count = getCartItemsCount();
+    itemsPill.textContent = `${count} ítems`;
+
+    if(count === 0){
+      cartHint.textContent = "Agregá productos para continuar";
+      cartListEl.innerHTML = `<div class="muted">Carrito vacío.</div>`;
+    }else{
+      cartHint.textContent = "Revisá cantidades";
+      cartListEl.innerHTML = Object.entries(cart).map(([id, qty]) => {
+        const p = PRODUCTS.find(x => x.id === id);
+        if(!p) return "";
+        const line = p.price * qty;
+        return `
+          <div class="cartItem">
+            <div>
+              <h4>${p.name}</h4>
+              <small>${money(p.price)} · Línea: <strong>${money(line)}</strong></small>
+            </div>
+            <div class="qty">
+              <button class="btn" onclick="decFromCart('${id}')">−</button>
+              <div class="qtyNum">${qty}</div>
+              <button class="btn" onclick="addToCart('${id}')">+</button>
+              <button class="btn btnDanger" onclick="removeItem('${id}')" title="Eliminar">✕</button>
             </div>
           </div>
         `;
       }).join("");
     }
 
-    // =========================
-    // RENDER Carrito
-    // =========================
-    const cartListEl = document.getElementById("cartList");
-    const itemsPill = document.getElementById("itemsPill");
-    const totalPill = document.getElementById("totalPill");
-    const subtotalEl = document.getElementById("subtotal");
-    const totalEl = document.getElementById("total");
-    const cartHint = document.getElementById("cartHint");
-    const shippingEl = document.getElementById("shipping");
-    const btnClear = document.getElementById("btnClear");
-    const btnCheckout = document.getElementById("btnCheckout");
+    const sub = calcSubtotal();
+    const ship = Number(shippingEl.value || 0);
+    const tot = sub + ship;
 
-    function renderCart(){
-      const count = getCartItemsCount();
-      itemsPill.textContent = `${count} ítems`;
+    subtotalEl.textContent = money(sub);
+    totalEl.textContent = money(tot);
+    totalPill.textContent = money(tot);
+  }
 
-      if(count === 0){
-        cartHint.textContent = "Agregá productos para continuar";
-        cartListEl.innerHTML = `<div class="muted">Carrito vacío.</div>`;
-      }else{
-        cartHint.textContent = "Revisá cantidades";
-        cartListEl.innerHTML = Object.entries(cart).map(([id, qty]) => {
-          const p = PRODUCTS.find(x => x.id === id);
-          if(!p) return "";
-          const line = p.price * qty;
-          return `
-            <div class="cartItem">
-              <div>
-                <h4>${p.name}</h4>
-                <small>${money(p.price)} · Línea: <strong>${money(line)}</strong></small>
-              </div>
-              <div class="qty">
-                <button class="btn" onclick="decFromCart('${id}')">−</button>
-                <div class="qtyNum">${qty}</div>
-                <button class="btn" onclick="addToCart('${id}')">+</button>
-                <button class="btn btnDanger" onclick="removeItem('${id}')" title="Eliminar">✕</button>
-              </div>
-            </div>
-          `;
-        }).join("");
-      }
+  shippingEl.addEventListener("change", renderCart);
+  btnClear.addEventListener("click", clearCart);
 
-      const sub = calcSubtotal();
-      const ship = Number(shippingEl.value || 0);
-      const tot = sub + ship;
-
-      subtotalEl.textContent = money(sub);
-      totalEl.textContent = money(tot);
-      totalPill.textContent = money(tot);
-    }
-
-    shippingEl.addEventListener("change", renderCart);
-    btnClear.addEventListener("click", clearCart);
-
-    // =========================
-    // CHECKOUT
-    // =========================
-    function validateCheckout(){
-      const count = getCartItemsCount();
-      if(count === 0) return { ok:false, msg:"El carrito está vacío." };
-
-      const name = document.getElementById("name").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const address = document.getElementById("address").value.trim();
-      const city = document.getElementById("city").value.trim();
-
-      const isPickup = Number(shippingEl.value) === 0;
-
-      if(!name) return { ok:false, msg:"Falta tu nombre." };
-      if(!phone) return { ok:false, msg:"Falta tu teléfono." };
-      if(!isPickup){
-        if(!address) return { ok:false, msg:"Falta la dirección." };
-        if(!city) return { ok:false, msg:"Falta la ciudad." };
-      }
-      return { ok:true };
-    }
-
-    function buildSummary(orderId){
-      const sub = calcSubtotal();
-      const ship = Number(shippingEl.value || 0);
-      const tot = sub + ship;
-
-      const name = document.getElementById("name").value.trim();
-      const phone = document.getElementById("phone").value.trim();
-      const address = document.getElementById("address").value.trim();
-      const city = document.getElementById("city").value.trim();
-      const zip = document.getElementById("zip").value.trim();
-      const notes = document.getElementById("notes").value.trim();
-      const isPickup = ship === 0;
-
-      const lines = [];
-      lines.push(`🍣 Pedido Sushi — ID ${orderId}`);
-      lines.push(`👤 Cliente: ${name}`);
-      lines.push(`📞 Tel: ${phone}`);
-      lines.push(isPickup ? `📦 Entrega: Retiro por el local` : `🛵 Entrega: Envío`);
-      if(!isPickup){
-        lines.push(`📍 Dirección: ${address}`);
-        lines.push(`🏙️ Ciudad: ${city}${zip ? " · CP "+zip : ""}`);
-      }
-      if(notes) lines.push(`📝 Notas: ${notes}`);
-      lines.push("");
-      lines.push("🧾 Items:");
-      for(const [id, qty] of Object.entries(cart)){
-        const p = PRODUCTS.find(x => x.id === id);
-        if(!p) continue;
-        lines.push(`- ${qty} x ${p.name} (${money(p.price)}) = ${money(p.price*qty)}`);
-      }
-      lines.push("");
-      lines.push(`Subtotal: ${money(sub)}`);
-      lines.push(`Envío: ${money(ship)}`);
-      lines.push(`TOTAL: ${money(tot)}`);
-      return lines.join("\n");
-    }
-
-    // Cuando finaliza: manda a Telegram y muestra pantalla enviada
-    const sentDetailsEl = document.getElementById("sentDetails");
-    btnCheckout.addEventListener("click", async () => {
-      const v = validateCheckout();
-      if(!v.ok){ alert(v.msg); return; }
-
-      const orderId = genOrderId();
-      const summary = buildSummary(orderId);
-
-      console.log("Summary length:", summary.length);
-      console.log(summary);
-
-      const oldText = btnCheckout.textContent;
-      btnCheckout.disabled = true;
-      btnCheckout.textContent = "Enviando…";
-
-      try{
-        await sendToTelegram(summary);
-
-        // Solo si Telegram confirmó OK, mostramos pantalla enviada
-        sentDetailsEl.textContent = summary;
-        showScreen("screenSent");
-        clearCart();
-      }catch(e){
-        alert("No se pudo enviar el pedido a Telegram.\n\n" + e.message + "\n\nAbrí F12 > Console para ver más.");
-        console.error("Telegram send failed:", e);
-      }finally{
-        btnCheckout.disabled = false;
-        btnCheckout.textContent = oldText;
-      }
+  // =========================
+  // TELEGRAM (con validación + split por largo)
+  // =========================
+  async function telegramSendOne(part){
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: part })
     });
 
-    // =========================
-    // NUEVO PEDIDO
-    // =========================
-    document.getElementById("btnNewOrder").addEventListener("click", () => {
-      document.getElementById("name").value = "";
-      document.getElementById("phone").value = "";
-      document.getElementById("address").value = "";
-      document.getElementById("city").value = "";
-      document.getElementById("zip").value = "";
-      document.getElementById("notes").value = "";
-      document.getElementById("shipping").value = "0";
+    const data = await res.json().catch(() => null);
+    if(!res.ok || !data || !data.ok){
+      throw new Error("Telegram error: " + JSON.stringify(data || { http_status: res.status }));
+    }
+    return data;
+  }
 
-      showScreen("screenMain");
-      renderCart();
-    });
+  async function sendToTelegram(text){
+    if(!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID){
+      throw new Error("Falta TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID");
+    }
+    const MAX = 3900;
+    const parts = [];
+    for(let i=0; i<text.length; i += MAX) parts.push(text.slice(i, i + MAX));
+    for(let idx=0; idx<parts.length; idx++){
+      const prefix = (parts.length > 1) ? `(${idx+1}/${parts.length}) ` : "";
+      await telegramSendOne(prefix + parts[idx]);
+    }
+  }
 
-    // =========================
-    // WhatsApp Floating Button
-    // =========================
-    document.getElementById("waFloat").addEventListener("click", () => {
-      const url = `https://wa.me/${WHATSAPP_NUMBER}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-    });
+  // =========================
+  // CHECKOUT
+  // =========================
+  function validateCheckout(){
+    const count = getCartItemsCount();
+    if(count === 0) return { ok:false, msg:"El carrito está vacío." };
 
-    // Init
-    renderProducts();
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const city = document.getElementById("city").value.trim();
+    const isPickup = Number(shippingEl.value) === 0;
+
+    if(!name) return { ok:false, msg:"Falta tu nombre." };
+    if(!phone) return { ok:false, msg:"Falta tu teléfono." };
+    if(!isPickup){
+      if(!address) return { ok:false, msg:"Falta la dirección." };
+      if(!city) return { ok:false, msg:"Falta la ciudad." };
+    }
+    return { ok:true };
+  }
+
+  function buildSummary(orderId){
+    const sub = calcSubtotal();
+    const ship = Number(shippingEl.value || 0);
+    const tot = sub + ship;
+
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const city = document.getElementById("city").value.trim();
+    const zip = document.getElementById("zip").value.trim();
+    const notes = document.getElementById("notes").value.trim();
+    const isPickup = ship === 0;
+
+    const lines = [];
+    lines.push(`🍣 Pedido Sushi — ID ${orderId}`);
+    lines.push(`👤 Cliente: ${name}`);
+    lines.push(`📞 Tel: ${phone}`);
+    lines.push(isPickup ? `📦 Entrega: Retiro por el local` : `🛵 Entrega: Envío`);
+    if(!isPickup){
+      lines.push(`📍 Dirección: ${address}`);
+      lines.push(`🏙️ Ciudad: ${city}${zip ? " · CP "+zip : ""}`);
+    }
+    if(notes) lines.push(`📝 Notas: ${notes}`);
+    lines.push("");
+    lines.push("🧾 Items:");
+    for(const [id, qty] of Object.entries(cart)){
+      const p = PRODUCTS.find(x => x.id === id);
+      if(!p) continue;
+      lines.push(`- ${qty} x ${p.name} (${money(p.price)}) = ${money(p.price*qty)}`);
+    }
+    lines.push("");
+    lines.push(`Subtotal: ${money(sub)}`);
+    lines.push(`Envío: ${money(ship)}`);
+    lines.push(`TOTAL: ${money(tot)}`);
+    return lines.join("\n");
+  }
+
+  const sentDetailsEl = document.getElementById("sentDetails");
+  btnCheckout.addEventListener("click", async () => {
+    const v = validateCheckout();
+    if(!v.ok){ alert(v.msg); return; }
+
+    const orderId = genOrderId();
+    const summary = buildSummary(orderId);
+
+    const oldText = btnCheckout.textContent;
+    btnCheckout.disabled = true;
+    btnCheckout.textContent = "Enviando…";
+
+    try{
+      await sendToTelegram(summary);
+      sentDetailsEl.textContent = summary;
+      showScreen("screenSent");
+      clearCart();
+    }catch(e){
+      alert("No se pudo enviar el pedido a Telegram.\n\n" + e.message);
+      console.error("Telegram send failed:", e);
+    }finally{
+      btnCheckout.disabled = false;
+      btnCheckout.textContent = oldText;
+    }
+  });
+
+  document.getElementById("btnNewOrder").addEventListener("click", () => {
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("address").value = "";
+    document.getElementById("city").value = "";
+    document.getElementById("zip").value = "";
+    document.getElementById("notes").value = "";
+    document.getElementById("shipping").value = "0";
+    showScreen("screenMain");
     renderCart();
-  </script>
+  });
+
+  document.getElementById("waFloat").addEventListener("click", () => {
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}`, "_blank", "noopener,noreferrer");
+  });
+
+  // =========================
+  // Tabs: click + “deslizamiento”
+  // =========================
+  const catBarEl = document.getElementById("catBar");
+  catBarEl.addEventListener("click", (e) => {
+    const btn = e.target.closest(".catBtn");
+    if(!btn) return;
+    document.querySelectorAll(".catBtn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentCat = btn.dataset.cat;
+    renderProducts();
+  });
+
+  // Swipe simple (mobile): arrastrar izquierda/derecha para cambiar categoría
+  let touchX = null;
+  catBarEl.addEventListener("touchstart", (e) => { touchX = e.touches[0].clientX; }, {passive:true});
+  catBarEl.addEventListener("touchend", (e) => {
+    if(touchX == null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+
+    if(Math.abs(dx) < 60) return; // umbral
+    const cats = ["PIEZAS","CAJAS","BEBIDAS_EXTRAS"];
+    const idx = cats.indexOf(currentCat);
+    const next = dx < 0 ? Math.min(idx+1, cats.length-1) : Math.max(idx-1, 0);
+    if(next === idx) return;
+
+    currentCat = cats[next];
+    const btn = [...document.querySelectorAll(".catBtn")].find(b => b.dataset.cat === currentCat);
+    if(btn){
+      document.querySelectorAll(".catBtn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      btn.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+    }
+    renderProducts();
+  }, {passive:true});
+
+  // =========================
+  // INIT
+  // =========================
+  (async function init(){
+    try{
+      await loadProductsFromSheet();
+    }catch(err){
+      console.error(err);
+      // fallback: si no carga, mostramos un mensaje en el grid de productos
+      productsEl.innerHTML = `
+        <div class="card" style="border:1px solid rgba(255,92,92,.35); background:rgba(255,92,92,.06)">
+          <div style="font-weight:900; margin-bottom:6px">No se pudo cargar la carta</div>
+          <div class="muted" style="font-size:13px; line-height:1.4">
+            Revisá que la Google Sheet esté publicada como CSV y que SHEET_ID y GID estén bien.
+          </div>
+        </div>
+      `;
+    }
+    renderCart();
+  })();
+</script>
 </body>
 </html>
